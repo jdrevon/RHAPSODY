@@ -44,10 +44,10 @@ def check_intensity_old(res_UD,res_UD_bef,res_F_mod,nb_UD):
         return F_new, I_tot_norm
 
 
-def check_intensity(res_F_mod, res_UD, res_UD_bef):
+def check_intensity(res_F_mod, res_UD, res_UD_bef, intensity_init, flux_init):
 
         I_tot_tmp = (res_F_mod*np.array([normalized_brightness_R(res_UD[i]/2, res_UD_bef[i], res_UD[i])[0] for i in range(len(res_UD))]))
-        I_tot_norm = I_tot_tmp/I_tot_tmp[0]
+        I_tot_norm = I_tot_tmp#/I_tot_tmp[0]
 
         r_prob_index = np.where(I_tot_norm>1)[0]
                   
@@ -56,8 +56,34 @@ def check_intensity(res_F_mod, res_UD, res_UD_bef):
         if np.shape(r_prob_index)[0]!= 0:
             for i in range(0,len(r_prob_index)):
                 index = r_prob_index[i]
-                F_new[index] = 1/normalized_brightness_R(res_UD[index]/2, res_UD_bef[index], res_UD[index])[0]
-                I_tot_norm[index] = 1 
+                F_new[index] = flux_init[index]
+                I_tot_norm[index] =  intensity_init[index]
 
+        #F_new[index] = 1/normalized_brightness_R(res_UD[index]/2, res_UD_bef[index], res_UD[index])[0]
+                
+
+        # F_UD_0 = res_F_mod[0]
+        # F_new = res_F_mod
+        # I_tot_norm = res_F_mod/F_UD_0*intensity_init/intensity_init[0]
+
+        # # print(I_tot_norm)
+        # r_prob_index = np.where(I_tot_norm>1)[0]
+          
+        
+        # if np.shape(r_prob_index)[0]!= 0:
+        #     # print('rho \n')
+        #     # print(rho)
+        #     # print('I_tot_norm \n')
+        #     # print(I_tot_norm)
+        #     # print('r_prob_index \n')
+        #     # print(r_prob_index)
+        #     # print('res_F_mod \n')
+        #     # print(res_F_mod)
+        #     for i in range(0,len(r_prob_index)):
+        #         index = r_prob_index[i]
+        #         ratio_I = intensity_init[0]/intensity_init[index]
+        #         F_new[index] = ratio_I*res_F_mod[0]
+        #         I_tot_norm[index] = np.sum(F_new[index]/F_UD_0/ratio_I,axis=0)
+                
             
         return F_new, I_tot_norm

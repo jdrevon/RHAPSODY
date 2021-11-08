@@ -18,7 +18,7 @@ from prettytable import PrettyTable
 
 import matplotlib.pyplot as plt
 
-def short_model(params,q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model, REG_method):
+def short_model(params,q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model, REG_method, intensity_init, flux_init):
     
     
     nb_UD = int(len(params)/3)
@@ -26,14 +26,14 @@ def short_model(params,q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model, RE
     res_UD_bef        = [params['diam_UD_bef'+str(i)].value for i in range(nb_UD)]
     res_F_tmp         = [params['flux_ftot'+str(i)].value for i in range(nb_UD)]
 
-    res_F, I_tot_norm = check_intensity(res_F_tmp, res_UD, res_UD_bef)
+    res_F, I_tot_norm = check_intensity(res_F_tmp, res_UD, res_UD_bef, intensity_init, flux_init)
 
     CF = np.sum([V_model[i]*res_F[i] for i in range(nb_UD)],axis=0)
-    
-    
+
+     
     F_tot = np.sum([res_F[k] for k in range(nb_UD)],axis=0)
     Vis2 = (CF/F_tot)**2
-    
+   
     # plt.figure()
     # plt.scatter(q_UD_fitting,Vis2,s=2)
     
@@ -53,7 +53,7 @@ def short_model(params,q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model, RE
 
 
 def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
-                         q_UD_HR_tmp, diam_UD_tmp, diam_UD_bef_tmp, flux_ratio_LM, flux_ratio_N,\
+                         q_UD_HR_tmp, diam_UD_tmp, diam_UD_bef_tmp, flux_ratio_LM, flux_ratio_N, intensity_profile_LM, intensity_profile_N, flux_LM_max_tmp, flux_N_max_tmp,\
                                      HP, V_model,\
                                          PATH_OUTPUT, PATH_OUTPUT_VIS, PATH_OUTPUT_INT, PATH_OUTPUT_HIST, PATH_OUTPUT_FIT_RES, PLOT):
          
@@ -84,16 +84,18 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
     name_var_UD_bef = ['diam_UD_bef'+str(i) for i in range(np.shape(diam_UD_tmp[0])[0])]
     name_var_F = ['flux_ftot'+str(i) for i in range(np.shape(diam_UD_tmp[0])[0])]
 
+    variation_LM = np.ones(len(diam_UD_tmp[0])).astype('bool')
+    variation_LM[0] = False
 
     params2_LM = Parameters()        
     [params2_LM.add(name_var_UD[k],value = diam_UD_tmp[0][k], vary= False) for k in range(np.shape(diam_UD_tmp[0])[0])]
     [params2_LM.add(name_var_UD_bef[k],value = diam_UD_bef_tmp[0][k], vary= False) for k in range(np.shape(diam_UD_tmp[0])[0])]
+    [params2_LM.add(name_var_F[k],value = flux_ratio_LM[k], min = 0 , max = flux_LM_max_tmp[k], vary= variation_LM[k]) for k in range(np.shape(diam_UD_tmp[0])[0])]      
 
     # Indeed the more we get further from the star, the more the rings have low probability to have higher intensity than the central uniform disk using this maximum boundary
     # This will also hardly depend on the initial intensity profile that we use. At the moment only 1/r^alpha are available thus this is impossible 
     # to have high intensity rings far from the star.
 
-    [params2_LM.add(name_var_F[k],value = flux_ratio_LM[k], min = 0 , max = np.max(flux_ratio_LM), vary= True) for k in range(np.shape(diam_UD_tmp[0])[0])]      
 
     # FOR N-BAND
 
@@ -101,11 +103,15 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
     name_var_UD_bef = ['diam_UD_bef'+str(i) for i in range(np.shape(diam_UD_tmp[1])[0])]
     name_var_F = ['flux_ftot'+str(i) for i in range(np.shape(diam_UD_tmp[1])[0])]
 
+    variation_N = np.ones(len(diam_UD_tmp[1])).astype('bool')
+    variation_N[0] = False
+
     params2_N = Parameters()        
     [params2_N.add(name_var_UD[k],value = diam_UD_tmp[1][k], vary= False) for k in range(np.shape(diam_UD_tmp[1])[0])]
     [params2_N.add(name_var_UD_bef[k],value = diam_UD_bef_tmp[1][k], vary= False) for k in range(np.shape(diam_UD_tmp[1])[0])]
-    [params2_N.add(name_var_F[k],value = flux_ratio_N[k], min = 0 , max = np.max(flux_ratio_N), vary= True) for k in range(np.shape(diam_UD_tmp[1])[0])]      
+    [params2_N.add(name_var_F[k],value = flux_ratio_N[k], min = 0 , max = flux_N_max_tmp[k], vary= variation_N[k]) for k in range(np.shape(diam_UD_tmp[1])[0])]      
 
+    
     # OK LET'S GO FIT: DON'T STOP ME NOW !
 
     i_LM = 0
@@ -117,12 +123,15 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
             diam_UD = diam_UD_tmp[0]
             params2 = params2_LM
             q_UD_HR = q_UD_HR_tmp[0]
-
+            intensity_init = intensity_profile_LM
+            flux_init = flux_ratio_LM
+            
         else : 
             diam_UD = diam_UD_tmp[1]
             params2 = params2_N
             q_UD_HR = q_UD_HR_tmp[1]
-            
+            intensity_init = intensity_profile_N            
+            flux_init = flux_ratio_N
 
         nb_UD = np.shape(diam_UD)[0]        
         
@@ -133,8 +142,9 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
         
         if nb_UD != 1:
                         
-            res2 = minim(short_model, params2, args=(q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model[i], REG_method), method='COBYLA',max_nfev=max_iterations, tol = tolerance) # 5E-4 OK
 
+            res2 = minim(short_model, params2, args=(q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model[i], REG_method, intensity_init, flux_init), method='COBYLA',max_nfev=max_iterations, tol = tolerance) # 5E-4 OK
+        
             res_UD = [res2.params['diam_UD'+str(k)].value for k in range(nb_UD)]
             res_UD_bef = [res2.params['diam_UD_bef'+str(k)].value for k in range(nb_UD)]
             res_F_tmp = [res2.params['flux_ftot'+str(k)].value for k in range(nb_UD)]
@@ -142,7 +152,7 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
             # This function has been already included in the computation of the chi2 but have to be also execute in the output to take into consideration the different changes made on the flux values.
             # Here we say that wa cannot have an intensity higher than the central uniform disk. Which is in the continuity of our initial condition.
             
-            res_F, I_tot_norm = check_intensity(res_F_tmp, res_UD, res_UD_bef)
+            res_F, I_tot_norm = check_intensity(res_F_tmp, res_UD, res_UD_bef, intensity_init, flux_init)
 
 
             # Indeed, it is an easy task to compute I_norm (the normalized intensity profil with respect to the central uniform disk value) from the flux since we control the geometry of our model.
@@ -195,7 +205,7 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
             # CHI2:
     
             N = len(V2_MATISSE)
-            chi2_tmp = np.sum((V2_MATISSE-V2_fitting/V2_MATISSE_ERR)**2)
+            chi2_tmp = np.sum(((V2_MATISSE-V2_fitting)/V2_MATISSE_ERR)**2)
             chi2[i]=chi2_tmp
     
             # CHI2_REDUCED:

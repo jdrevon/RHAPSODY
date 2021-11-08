@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Mon Oct 11 15:19:23 2021
@@ -65,13 +66,13 @@ def rings(size_ring_LM, size_ring_N, NBR_ring_LM, NBR_ring_N, NBR_WL_LM, NBR_WL_
   
     if init == 'PW':  
   
-        I_ratio_LM = 1/diam_UD_LM**alpha_LM/(1/diam_UD_LM[0]**alpha_LM)   
+        I_ratio_LM = 1/diam_UD_LM**alpha_LM/(1/diam_UD_LM[0]**alpha_LM)
         I_ratio_N  = 1/diam_UD_N**alpha_N/(1/diam_UD_N[0]**alpha_N)
 
     elif init == 'G':  
         
-        I_ratio_LM = gaussian(0, sigma_LM, 1, diam_UD_LM) 
-        I_ratio_N  = gaussian(0, sigma_N, 1, diam_UD_N) 
+        I_ratio_LM = gaussian(0, sigma_LM, 1, diam_UD_LM)/gaussian(0,sigma_LM, 1, diam_UD_LM[0])
+        I_ratio_N  = gaussian(0, sigma_N, 1, diam_UD_N)/gaussian(0, sigma_N, 1, diam_UD_N[0]) 
         
     else: 
         print("Please enter a valid value: Power (PW) or Gaussian (G) Law")
@@ -79,11 +80,17 @@ def rings(size_ring_LM, size_ring_N, NBR_ring_LM, NBR_ring_N, NBR_WL_LM, NBR_WL_
 
     # 3 Determination of the associated flux of each rings with respect to the user's intensity profile and rings' dimensions
 
-    flux_LM  = I_ratio_LM/np.array([normalized_brightness_R(diam_UD_LM[i]/2, diam_UD_bef_LM[i], diam_UD_LM[i])[0] for i in range(len(diam_UD_LM))]) + 1E-9
-    flux_N   = I_ratio_N/np.array([normalized_brightness_R(diam_UD_N[i]/2, diam_UD_bef_N[i], diam_UD_N[i])[0] for i in range(len(diam_UD_N))]) + 1E-9
-    
-    flux_ratio_LM = flux_LM
-    flux_ratio_N  = flux_N    
-    
+    flux_LM  = I_ratio_LM/np.array([normalized_brightness_R(diam_UD_LM[i]/2, diam_UD_bef_LM[i], diam_UD_LM[i])[0] for i in range(len(diam_UD_LM))])
+    flux_N   = I_ratio_N/np.array([normalized_brightness_R(diam_UD_N[i]/2, diam_UD_bef_N[i], diam_UD_N[i])[0] for i in range(len(diam_UD_N))])
+             
 
-    return diam_UD_bef, diam_UD, I_ratio_LM, I_ratio_N, flux_ratio_LM, flux_ratio_N
+    flux_LM_max = 1/np.array([normalized_brightness_R(diam_UD_LM[i]/2, diam_UD_bef_LM[i], diam_UD_LM[i])[0] for i in range(len(diam_UD_LM))])
+    flux_N_max  = 1/np.array([normalized_brightness_R(diam_UD_N[i]/2, diam_UD_bef_N[i], diam_UD_N[i])[0] for i in range(len(diam_UD_N))])
+
+    # flux_LM = flux_LM/np.sum(flux_LM)
+    # flux_N  = flux_N/np.sum(flux_N)
+    
+    # flux_LM_max = flux_LM_max/np.sum(flux_LM)
+    # flux_N_max = flux_N_max/np.sum(flux_N)
+
+    return diam_UD_bef, diam_UD, I_ratio_LM, I_ratio_N, flux_LM, flux_N, flux_LM_max, flux_N_max

@@ -7,16 +7,16 @@ Created on Tue Oct 12 10:58:06 2021
 
 ############ DIRECTORIES:
     
-# Path of the folder containing all the OIFITS files (LM+N):
+# Path of the folder containing all the OIFITS final calibrated files (LM+N):
 
 MATISSE_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
 
 
 ############ DATA ERROR BARS:
     
-ERROR_VIS = True 
+ERROR_SUP = 0.02 
 # Does the error bar on visibilities seems underestimated? 
-#If Yes the real error bars are replaced by np.sqrt(V2_err**2+0.02**2) during the computation! 
+#The real error bars are replaced by np.sqrt(V2_err**2+ERROR_SUP**2) during the computation! 
 # The OIFITS files are not modified here
 
 ############ DATA WVL ranges
@@ -44,7 +44,7 @@ alpha_N      = .2   # alpha_N  [#] : Power law of the initial guess intensity pr
 
 # For G profile:
     
-sigma_LM     = 7    # sigma_LM [mas] : Standard deviation of the intensity profile for LM band 
+sigma_LM     = 5    # sigma_LM [mas] : Standard deviation of the intensity profile for LM band 
 sigma_N      = 15   # sigma_N  [mas] : Standard deviation of the intesnity profile for N band 
 
 ########### Method of Regularization: 
@@ -58,7 +58,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [1E4, 1E7] # µ
+HP = [1E4] # µ
 
 ########### Fitting Parameters:
     
@@ -66,7 +66,7 @@ HP = [1E4, 1E7] # µ
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
 fitting_method  = 'COBYLA' 
-tolerance       = 5E-4 # 5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the more the number is lwo the more the precision is high but the more the computer time will increase)
+tolerance       = 5E-4 # 5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
 max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergence
 
 
@@ -93,13 +93,11 @@ model_rho_max_N   = None # [rad^-1] If None the intensity profile ends at the mo
 model_rho_N       = 1000  # Number of points in the model  
 
 
-
 ########### OPTIONNAL FEATURES PARAMETERS:
     
 # The followings features are not essentials in the RHAPSODY code, however we decided to keep them for users.
 # They are still present in the code we kept them, since the allocated computing time for them is negligeable
 # Here are the few parameters of those features that you can adjust at your convenience
-
 
 #1 : Position Angle groups
 
@@ -116,7 +114,15 @@ NBR_GRPS_PA = 4
 
 FITTING = True
 
-#3 : Pierson residuals
+#3 :  Instrument spectra normalization with a black body. 
+# This routine will normalize the instrument spectra by a blackbody spectrum.
+# In order to do it the routine needs the black body temperature, the estimated stellar radius in astronomical units and the distance in parsec of the object.
 
-#
+BB_norm = True 
+
+BB_temperature = 2700 # Kelvins
+distance_target = 361 #pc
+stellar_radii = 1.91 # AU
+
+
 
