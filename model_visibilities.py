@@ -9,7 +9,6 @@ import numpy as np
 from A1_mas_to_rad import mas_to_rad
 from scipy.special import j1,jv
 
-
 def V_uniform(q,diam):
     
     V = 2*j1(np.pi*q*mas_to_rad(diam))/(np.pi*q*mas_to_rad(diam))

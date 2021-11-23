@@ -11,13 +11,16 @@ Created on Tue Oct 12 10:58:06 2021
 
 MATISSE_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
 
+############ PARALLELIZATION:
+    
+nprocs = 8 # Nbr of cores 
 
 ############ DATA ERROR BARS:
     
 ERROR_SUP = 0.02 
 # Does the error bar on visibilities seems underestimated? 
 #The real error bars are replaced by np.sqrt(V2_err**2+ERROR_SUP**2) during the computation! 
-# The OIFITS files are not modified here
+# The OIFITS files are not modified
 
 ############ DATA WVL ranges
 
@@ -123,6 +126,5 @@ BB_norm = True
 BB_temperature = 2700 # Kelvins
 distance_target = 361 #pc
 stellar_radii = 1.91 # AU
-
 
 

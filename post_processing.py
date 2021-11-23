@@ -10,11 +10,11 @@ from data_cube import image_to_data_cube
 from imaging_model import imaging_model
 from plot_intensity_rec_model import plot_intensity_model_image, plot_intensity_model_profile
 
-def post_processing(PATH_OUTPUT_INT, wavel_model, R_image, image_resolution='default'):
+def post_processing(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_INT, wavel_model, R_image, image_resolution='default'):
     
     
-    PATH_INTENSITY_PROFILE_LM = PATH_OUTPUT_INT+'intensity_LM.dat'
-    PATH_INTENSITY_PROFILE_N  = PATH_OUTPUT_INT+'intensity_N.dat'
+    PATH_INTENSITY_PROFILE_LM = PATH_OUTPUT_FIT_RES+'intensity_LM.dat'
+    PATH_INTENSITY_PROFILE_N  = PATH_OUTPUT_FIT_RES+'intensity_N.dat'
 
     if image_resolution == 'default':
         rho_LM, I_tot_norm_HR_LM, wavel_LM = increase_intensity_profile_res(PATH_INTENSITY_PROFILE_LM)
@@ -66,8 +66,8 @@ def post_processing(PATH_OUTPUT_INT, wavel_model, R_image, image_resolution='def
         plot_intensity_model_profile(x_model_profile, y_model_profile, wavel_model[i], PLOT= False, SAVE_OUTPUT = PATH_OUTPUT_INT, xlim_max = R_image)
         # print('PROFILE END')
 
-    image_to_data_cube(stock_images_LM, x_model_image_LM , x_model_image_LM, wavel_LM, PATH_OUTPUT_INT, 'image_LM_datacube')
-    image_to_data_cube(stock_images_N, x_model_image_N , x_model_image_N, wavel_N, PATH_OUTPUT_INT, 'image_N_datacube')
+    image_to_data_cube(stock_images_LM, x_model_image_LM , x_model_image_LM, wavel_LM, PATH_OUTPUT_FIT_RES, 'image_LM_datacube')
+    image_to_data_cube(stock_images_N, x_model_image_N , x_model_image_N, wavel_N, PATH_OUTPUT_FIT_RES, 'image_N_datacube')
 
     print('END IMAGE RECONSTRUCTION')
     
