@@ -9,7 +9,13 @@ Created on Tue Oct 12 10:58:06 2021
     
 # Path of the folder containing all the OIFITS final calibrated files (LM+N):
 
-MATISSE_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
+#MATISSE_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
+MATISSE_DIR = "C:/Users/jdrevon/Desktop/LNbands"
+############ PARALLELIZATION:
+
+# Number of telescopes used
+
+ntelescope = 4
 
 ############ PARALLELIZATION:
     

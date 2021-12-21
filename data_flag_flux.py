@@ -9,10 +9,21 @@ from astropy.io import fits
 import sys 
 import numpy as np
 import matplotlib.pyplot as plt
+from rhapsody_init import ntelescope
 
 def FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N, PLOT):
     
-    AT=['AT1','AT2','AT3','AT4']
+    if ntelescope == 2:
+
+        AT=['AT1','AT2']
+        
+    if ntelescope == 3:
+
+        AT=['AT1','AT2','AT3']
+        
+    if ntelescope == 4:
+    
+        AT=['AT1','AT2','AT3','AT4']
     
     for item in AT:
         
@@ -79,7 +90,17 @@ def FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N, PLOT):
                     STA_INDEX  = fichier['OI_ARRAY'].data['STA_INDEX']                
                     FLUX_STA_INDEX    = fichier['OI_FLUX'].data['STA_INDEX']                
                     lambda_fichier       = fichier["OI_WAVELENGTH"].data["EFF_WAVE"]
-                    flux_number = ((TEL_NAME[np.where(STA_INDEX==FLUX_STA_INDEX)]*(np.ones((len(lambda_fichier),len(FLUX_STA_INDEX)))).astype(int)).T)
+
+                    # print(STA_INDEX)
+                    # print(FLUX_STA_INDEX)
+                    # print(TEL_NAME)
+
+                    right_order = np.array([np.where(np.array(STA_INDEX)[index]== np.array(FLUX_STA_INDEX))[0][0] for index in range(len(FLUX_STA_INDEX))])
+                    flux_number = ((TEL_NAME[right_order]*(np.ones((len(lambda_fichier),len(FLUX_STA_INDEX)))).astype(int)).T)
+
+                    # print(TEL_NAME[right_order])
+                    # print(right_order)
+
     
                     # fichier['OI_FLUX'].data['FLAG'][flux_number==item] =\
                     # np.full(np.shape(fichier['OI_FLUX'].data['FLAG'][flux_number==item]), False)
@@ -111,7 +132,9 @@ def FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N, PLOT):
                     STA_INDEX  = fichier['OI_ARRAY'].data['STA_INDEX']                
                     FLUX_STA_INDEX    = fichier['OI_FLUX'].data['STA_INDEX']                
                     lambda_fichier       = fichier["OI_WAVELENGTH"].data["EFF_WAVE"]
-                    flux_number = ((TEL_NAME[np.where(STA_INDEX==FLUX_STA_INDEX)]*(np.ones((len(lambda_fichier),len(FLUX_STA_INDEX)))).astype(int)).T)
+
+                    right_order = np.array([np.where(np.array(STA_INDEX)[index]== np.array(FLUX_STA_INDEX))[0][0] for index in range(len(FLUX_STA_INDEX))])
+                    flux_number = ((TEL_NAME[right_order]*(np.ones((len(lambda_fichier),len(FLUX_STA_INDEX)))).astype(int)).T)
     
                     # fichier['OI_FLUX'].data['FLAG'][flux_number==item] =\
                     # np.full(np.shape(fichier['OI_FLUX'].data['FLAG'][flux_number==item]), False)

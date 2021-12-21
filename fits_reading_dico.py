@@ -12,7 +12,7 @@ import glob
 from A7_rad_to_deg import rad_to_deg
 from A8_PA_flag_new import flag_PA_new
 import shutil
-from rhapsody_init import MATISSE_DIR
+from rhapsody_init import MATISSE_DIR, ntelescope
 from data_flag import FLAG_DATA
 from data_flag_flux import FLUX_FLAG
 
@@ -117,7 +117,7 @@ def OIFITS_SORTING():
             T3_PHI_ERR = fichier["OI_T3"].data["T3PHIERR"]
             FLAG_T3 = fichier["OI_T3"].data["FLAG"]
     
-            telescope = 4
+            telescope = ntelescope
             baseline  = int(telescope*(telescope-1)/2)
             exposure =  int(np.shape(fichier['OI_VIS2'].data['VIS2DATA'])[0]/baseline)        
 
@@ -205,7 +205,7 @@ def OIFITS_READING_complete():
      
     """    
 
-    telescope = 4
+    telescope = ntelescope
 
     MATISSE_DIR_LM      = MATISSE_DIR + '/LM' 
     MATISSE_DIR_N       = MATISSE_DIR + '/N'
@@ -428,7 +428,7 @@ def OIFITS_READING():
      
     """    
 
-    telescope = 4
+    telescope = ntelescope
 
     MATISSE_DIR_LM      = MATISSE_DIR + '/LM' 
     MATISSE_DIR_N       = MATISSE_DIR + '/N'
