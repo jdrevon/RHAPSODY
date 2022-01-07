@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 11 14:14:23 2020
@@ -5,7 +6,7 @@ Created on Tue Aug 11 14:14:23 2020
 @author: Julien
 """
 
-from rhapsody_init import size_ring_LM, size_ring_N, NBR_ring_LM, NBR_ring_N, alpha_LM, alpha_N, ERROR_SUP, MATISSE_DIR, REG_method, HP, FITTING, model_q_LM, model_q_N, model_q_max_LM, model_q_max_N, model_q_min_LM, model_q_min_N, BB_norm, BB_temperature, stellar_radii, distance_target
+from rhapsody_init import size_ring_LM, size_ring_N, NBR_ring_LM, NBR_ring_N, alpha_LM, alpha_N, ERROR_SUP_LM, ERROR_SUP_N, DATA_DIR, PROCESS_DIR, REG_method, HP, FITTING, model_q_LM, model_q_N, model_q_max_LM, model_q_max_N, model_q_min_LM, model_q_min_N, BB_norm, BB_temperature, stellar_radii, distance_target
 from initialisation_rings import rings
 from fits_reading_dico import OIFITS_READING, OIFITS_SORTING
 from stock_dico_values import stock_V2_from_dico
@@ -16,9 +17,17 @@ import numpy as np
 from spectra_extraction import spectra_matisse
 from A1_mas_to_rad import au_to_R_sun
 from black_body import BB_v_Jy
-
-
+from data_copy import COPY_DATA
 import sys
+
+from data_flag_flux import FLUX_FLAG
+
+
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+import matplotlib
+import matplotlib.colors as colors
+from cmcrameri import cm
 
 from model_visibilities import V_ring
 
@@ -27,28 +36,39 @@ from output_intensity_profile import output_intensity_profile
 from post_processing import post_processing
 
 if __name__ == '__main__':
+    
+    # COPY THE DATA IN THE RIGHT FOLDER 
 
+    COPY_DATA(DATA_DIR, PROCESS_DIR)
 
     # SORT DATA in FOLDERS based on V2 and T3 flags:
         
     OIFITS_SORTING()
-    
+        
     # READ ALL THE DATA and put them in two dicos in order to manipulate the data easily
     
     OIFITS_TOT_LM, OIFITS_TOT_N = OIFITS_READING()
+
+    # PROCESSING AND FLAGGING THE FLUX
+    
+    print('STARTING FLUX SORTING')
+    
+    OIFITS_TOT_LM, OIFITS_TOT_N = FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N)
+
+
+
     
     # We regroup all the usefull information that we want in simple masked array to handle easily the data for the fitting
     
     wavel_MATISSE, q_MATISSE, V2_MATISSE, V2_MATISSE_ERR = stock_V2_from_dico(OIFITS_TOT_LM, OIFITS_TOT_N)
     
-    wavel_LM = np.unique(wavel_MATISSE[wavel_MATISSE<6*1E-6])*1E6 #µm
-    wavel_N  = np.unique(wavel_MATISSE[wavel_MATISSE>6*1E-6])*1E6 #µm
+    wavel_LM = np.unique(wavel_MATISSE[wavel_MATISSE<6E-6])*1E6 #µm
+    wavel_N  = np.unique(wavel_MATISSE[wavel_MATISSE>6E-6])*1E6 #µm
     
     wavel_ALL = np.concatenate((wavel_LM,wavel_N)) #µm
     
     # Rings initialization
-    
-    
+        
     diam_inner_ring, diam_outter_ring, I_norm_LM, I_norm_N, flux_LM, flux_N, flux_LM_max, flux_N_max = rings(size_ring_LM, size_ring_N, NBR_ring_LM, NBR_ring_N, len(wavel_LM), len(wavel_N), alpha_LM, alpha_N)
     
     # Pre-Computing for each wavelengths the associated modeled visibilities for each rings
@@ -98,12 +118,14 @@ if __name__ == '__main__':
     q_UD_HR = np.array([np.logspace(model_q_min_LM,model_q_max_LM,model_q_LM), np.logspace(model_q_min_N,model_q_max_N,model_q_N)])
     
         
-    V2_MATISSE_ERR = np.sqrt(V2_MATISSE_ERR**2+ERROR_SUP**2)
+    V2_MATISSE_ERR[wavel_MATISSE<6E-6] = np.sqrt(V2_MATISSE_ERR[wavel_MATISSE<6E-6]**2+ERROR_SUP_LM**2)
+
+    V2_MATISSE_ERR[wavel_MATISSE>6E-6] = np.sqrt(V2_MATISSE_ERR[wavel_MATISSE>6E-6]**2+ERROR_SUP_N**2)
     
     
     # Initialization of the RESULTS folder to put model results
     
-    PATH_RESULTS = MATISSE_DIR+'/RESULTS'+ '/'
+    PATH_RESULTS = PROCESS_DIR+'/RESULTS'+ '/'
     
     if REG_method == 'TV':    
     
@@ -153,115 +175,414 @@ if __name__ == '__main__':
                 
             # 1/ Construction of the intensity profile plots + 2/ Construction of the image from the intensity profile plots
             
-            post_processing(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_INT, wavel_ALL, 40, image_resolution=2**8)
+        post_processing(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_INT, wavel_ALL, 40, image_resolution=2**8)
+
+        FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_matisse(OIFITS_TOT_LM,OIFITS_TOT_N, PATH_OUTPUT_FIT_RES, PATH_OUTPUT_SPECTRA)
+
+
+        # RESCALE 
+        
+        distance_LM, intensity_LM, distance_N, intensity_N, wavel_LM, wavel_N = output_intensity_profile(PATH_OUTPUT_FIT_RES+'intensity_LM.dat', PATH_OUTPUT_FIT_RES+'intensity_N.dat',wavel_ALL)
+        W_LM,D_LM=np.meshgrid(np.append(wavel_LM,wavel_LM[-1]+np.diff(wavel_LM)[-1]),np.append([0],distance_LM))
+        W_N,D_N=np.meshgrid(np.append(wavel_N,wavel_N[-1]+np.diff(wavel_N)[-1]),np.append([0],distance_N))
     
+        # RESCALE 
+        widths  = [1,1]
+        heights = [1,5]
     
-            # RESCALE 
-            
-            distance_LM, intensity_LM, distance_N, intensity_N, wavel_LM, wavel_N = output_intensity_profile(PATH_OUTPUT_FIT_RES+'intensity_LM.dat', PATH_OUTPUT_FIT_RES+'intensity_N.dat',wavel_ALL)
-            W_LM,D_LM=np.meshgrid(np.append(wavel_LM,wavel_LM[-1]+np.diff(wavel_LM)[-1]),np.append([0],distance_LM))
-            W_N,D_N=np.meshgrid(np.append(wavel_N,wavel_N[-1]+np.diff(wavel_N)[-1]),np.append([0],distance_N))
-        
-            # RESCALE 
-            widths  = [1,1]
-            heights = [1,5]
-            import matplotlib.pyplot as plt
-            from matplotlib.gridspec import GridSpec
-            import matplotlib
-            import matplotlib.colors as colors
-            from cmcrameri import cm
-        
-            mp   = cm.lajolla
-            rmap = mp.reversed()     
-        
-            fig=plt.figure(figsize=(8, 12))
-            gs1 = GridSpec(2, 2, width_ratios=widths, height_ratios=heights)
-            
-        
-            ax1 = plt.subplot(gs1[1,0])
-            ax2 = plt.subplot(gs1[1,1])
-        
-            ax3 = plt.subplot(gs1[0,0])
-            ax4 = plt.subplot(gs1[0,1])
-        
-            
-            plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
-            
-            W_LM_2,D_LM_2=np.meshgrid(wavel_LM,distance_LM)
-        
-            ax1.minorticks_on()
-            rect=plt.Rectangle((3.05, 0), 0.25, 56,alpha=0.4, color='lightgrey')
-            ax1.add_patch(rect)
-            rect2=plt.Rectangle((3.75, 0), 0.25, 56,alpha=0.4, color='lightgrey')
-            ax1.add_patch(rect2)
-            ax1.set_yscale('log')
-            ax1.set_ylim(3,max(distance_N))
-            ax1.yaxis.set_ticks_position('both')
-        
-            ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
-            ax1.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
-            ax1.tick_params(axis='both', labelsize=13)
-            ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
-            ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        
-            plot2=ax2.pcolor(W_N,D_N,np.array(intensity_N),norm=colors.LogNorm(vmin=1E-4, vmax=1), cmap=rmap)
-            
-            W_N_2,D_N_2=np.meshgrid(wavel_N,distance_N)
-        
-            ax2.set_ylim(3,max(distance_N))
-            ax2.minorticks_on()
-            ax2.set_yscale('log')
-            ax2.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
-            ax2.yaxis.set_ticks_position('both')
-            ax2.tick_params(axis='both', labelsize=13)
-            ax2.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        
-            fig.subplots_adjust(right=0.9)
-            cbar_ax = fig.add_axes([0.96, 0.15, 0.05, 0.7])
-            fig.colorbar(plot1, cax=cbar_ax).set_label(label=r'$I(\rho)/I(0)$',size=13)
-            fig.colorbar(plot1, cax=cbar_ax).ax.tick_params(labelsize=13) 
+        mp   = cm.lajolla
+        rmap = mp.reversed()     
     
-            
-            FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_matisse(OIFITS_TOT_LM, OIFITS_TOT_N)
-    
-            wavel_MATISSE_flux = np.array(FLUX_WAVEL)    
-            
-    
-            if BB_norm == True:
-            
-                wavel_BB, blackbody   = BB_v_Jy(wavel_MATISSE_flux*1E-6, BB_temperature, au_to_R_sun(stellar_radii), distance_target)
-                data2                 = FLUX_DATA/blackbody.astype('float')
-                MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
-                MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
-    
-            else:
-    
-                data2                 = FLUX_DATA            
-                MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
-                MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
-    
-            
-            ax3.tick_params(axis='both', labelsize=15)
-            ax3.set_xlim(np.amin(W_LM),np.amax(W_LM))
-            ax3.set_ylim(0.5,1.5)
-            ax3.set_ylabel('Normalized Flux',fontsize =15)
+        fig=plt.figure(figsize=(8, 12))
+        gs1 = GridSpec(2, 2, width_ratios=widths, height_ratios=heights)
         
-            ax3.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_LM))], label = 'MATISSE')
-            ax3.minorticks_on()
-            ax3.set
-        
-            ax4.tick_params(axis='both', labelsize=15)
-            ax4.set_xlim(np.amin(W_N),np.amax(W_N))
-            ax4.set_ylim(0.5,1.5)
-            ax4.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_N))])
-            ax4.minorticks_on()
+    
+        ax1 = plt.subplot(gs1[1,0])
+        ax2 = plt.subplot(gs1[1,1])
+    
+        ax3 = plt.subplot(gs1[0,0])
+        ax4 = plt.subplot(gs1[0,1])
     
         
-            handles, labels = [(a + b + c) for a, b, c in zip(ax1.get_legend_handles_labels(), ax2.get_legend_handles_labels(), ax3.get_legend_handles_labels())]
-            fig1=ax1.figure
-            fig1.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
-            
-            plt.setp(ax2.get_yticklabels(), visible=False)
+        plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
+                
+        # ax1.minorticks_on()
+        # rect=plt.Rectangle((3.05, 0), 0.25, 56,alpha=0.4, color='lightgrey')
+        # ax1.add_patch(rect)
+        # rect2=plt.Rectangle((3.75, 0), 0.25, 56,alpha=0.4, color='lightgrey')
+        # ax1.add_patch(rect2)
+        ax1.set_yscale('log')
+        ax1.set_ylim(3,max(distance_N))
+        ax1.yaxis.set_ticks_position('both')
+    
+        ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
+        ax1.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        ax1.tick_params(axis='both', labelsize=13)
+        ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
+        ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        plot2=ax2.pcolor(W_N,D_N,np.array(intensity_N),norm=colors.LogNorm(vmin=1E-4, vmax=1), cmap=rmap)
         
-            plt.savefig(PATH_OUTPUT_SPECTRA+'big_spectra.jpg',bbox_inches='tight', dpi=400)
-            plt.close(fig)
+        W_N_2,D_N_2=np.meshgrid(wavel_N,distance_N)
+    
+        ax2.set_ylim(3,max(distance_N))
+        ax2.minorticks_on()
+        ax2.set_yscale('log')
+        ax2.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        ax2.yaxis.set_ticks_position('both')
+        ax2.tick_params(axis='both', labelsize=13)
+        ax2.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        fig.subplots_adjust(right=0.9)
+        cbar_ax = fig.add_axes([0.96, 0.15, 0.05, 0.7])
+        fig.colorbar(plot1, cax=cbar_ax).set_label(label=r'$I(\rho)/I(0)$',size=13)
+        fig.colorbar(plot1, cax=cbar_ax).ax.tick_params(labelsize=13) 
+
+    
+        wavel_MATISSE_flux = np.array(FLUX_WAVEL)    
+        
+
+        if BB_norm == True:
+        
+            wavel_BB, blackbody   = BB_v_Jy(wavel_MATISSE_flux*1E-6, BB_temperature, au_to_R_sun(stellar_radii), distance_target)
+            data2                 = FLUX_DATA/blackbody.astype('float')
+            MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+            MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        else:
+
+            data2                 = FLUX_DATA            
+            MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+            MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        
+        ax3.tick_params(axis='both', labelsize=15)
+        ax3.set_xlim(np.amin(W_LM),np.amax(W_LM))
+        ax3.set_ylim(0.5,1.5)
+        ax3.set_ylabel('Normalized Flux',fontsize =15)
+    
+        ax3.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_LM))], label = 'MATISSE')
+        ax3.minorticks_on()
+        ax3.set
+    
+        ax4.tick_params(axis='both', labelsize=15)
+        ax4.set_xlim(np.amin(W_N),np.amax(W_N))
+        ax4.set_ylim(0.5,1.5)
+        ax4.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_N))])
+        ax4.minorticks_on()
+
+    
+        handles, labels = [(a + b + c) for a, b, c in zip(ax1.get_legend_handles_labels(), ax2.get_legend_handles_labels(), ax3.get_legend_handles_labels())]
+        fig1=ax1.figure
+        fig1.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
+        
+        plt.setp(ax2.get_yticklabels(), visible=False)
+    
+        plt.savefig(PATH_OUTPUT_SPECTRA+'big_spectra.jpg',bbox_inches='tight', dpi=400)
+        plt.close(fig)
+
+    
+
+        # Normalized intensity with respect to the biggest intensity among ALL the wavelength and convolved by the spectra:
+            
+        from pretty_table_reading import READ_PRETTY_TABLE
+        from flux_to_intensity import flux_to_intensity
+        
+        # Take the LM data
+        
+        data_LM = READ_PRETTY_TABLE(PATH_OUTPUT_FIT_RES+'fit_flux_ratio_LM.dat' , 1)
+
+        
+        max_ring_LM = data_LM[0][1:].astype('float')
+        min_ring_LM = max_ring_LM-np.diff(max_ring_LM)[0]
+        
+        wavel_LM_plot = data_LM[1][:,0]
+        flux_LM_plot = data_LM[1][:,1:]
+        
+        intensity_LM_plot = flux_to_intensity(min_ring_LM, max_ring_LM, flux_LM_plot).T
+        
+        # Take the N data
+        
+        data_N = READ_PRETTY_TABLE(PATH_OUTPUT_FIT_RES+'fit_flux_ratio_N.dat' , 1)
+
+        
+        max_ring_N = data_N[0][1:].astype('float')
+        min_ring_N = max_ring_N-np.diff(max_ring_N)[0]
+        
+        wavel_N_plot = data_N[1][:,0]
+        flux_N_plot = data_N[1][:,1:]
+        
+        intensity_N_plot = flux_to_intensity(min_ring_N, max_ring_N, flux_N_plot).T
+        
+
+        # CONVOLUTION BY THE SPECTRA:
+        
+        from scipy.interpolate import interp1d
+
+        # Interpolation of the intensity value of the science spectra using the resolution of the plot
+        
+        # RESCALE 
+
+        f_spectra = interp1d(FLUX_WAVEL, FLUX_DATA)
+                
+        f_spectra_interp_LM = f_spectra(wavel_LM_plot)
+        f_spectra_interp_N = f_spectra(wavel_N_plot)
+    
+        
+        W_LM,D_LM=np.meshgrid(np.append(wavel_LM_plot,wavel_LM_plot[-1]+np.diff(wavel_LM_plot)[-1]),np.append([0],max_ring_LM))
+        W_N,D_N=np.meshgrid(np.append(wavel_N_plot,wavel_N_plot[-1]+np.diff(wavel_N_plot)[-1]),np.append([0],max_ring_N))
+    
+    
+        # RESCALE 
+        widths  = [1,1]
+        heights = [1,5]
+
+
+    
+        # mp   = cm.berlin
+        # rmap = mp
+        mp   = cm.lajolla
+        rmap = mp.reversed()
+        
+        fig=plt.figure(figsize=(8, 12))
+        gs1 = GridSpec(2, 2, width_ratios=widths, height_ratios=heights)
+        
+    
+        ax1 = plt.subplot(gs1[1,0])
+        ax2 = plt.subplot(gs1[1,1])
+    
+        ax3 = plt.subplot(gs1[0,0])
+        ax4 = plt.subplot(gs1[0,1])
+    
+        intensity_LM_plot = intensity_LM_plot*f_spectra_interp_LM/np.amax(intensity_LM_plot*f_spectra_interp_LM)
+        # intensity_LM = ((intensity_LM.T-intensity_LM[:,21]).T)/np.amax((intensity_LM.T-intensity_LM[:,21]).T)
+        intensity_N_plot = intensity_N_plot*f_spectra_interp_N/np.amax(intensity_N_plot*f_spectra_interp_N)
+        
+        plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM_plot+1E-10),norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
+
+        # plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),shading='auto', cmap=rmap)
+
+        # plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),shading='auto', cmap=rmap, norm=colors.TwoSlopeNorm(vcenter=0.,vmax=0.05, vmin=-0.05))
+
+                
+        ax1.minorticks_on()
+        # rect=plt.Rectangle((3.05, 0), 0.25, 56,alpha=0.2, color='lightgrey')
+        # ax1.add_patch(rect)
+        # rect2=plt.Rectangle((3.75, 0), 0.25, 56,alpha=0.2, color='lightgrey')
+        # ax1.add_patch(rect2)
+        ax1.set_yscale('log')
+        ax1.set_ylim(3,max(distance_N))
+        ax1.yaxis.set_ticks_position('both')
+    
+        ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
+        ax1.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        ax1.tick_params(axis='both', labelsize=13)
+        ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
+        ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        plot2=ax2.pcolor(W_N,D_N,np.array(intensity_N_plot)+1E-10,norm=colors.LogNorm(vmin=1E-4, vmax=1), cmap=rmap)
+        
+        W_N_2,D_N_2=np.meshgrid(wavel_N_plot,distance_N)
+    
+        ax2.set_ylim(3,max(distance_N))
+        ax2.minorticks_on()
+        ax2.set_yscale('log')
+        ax2.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        ax2.yaxis.set_ticks_position('both')
+        ax2.tick_params(axis='both', labelsize=13)
+        ax2.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        fig.subplots_adjust(right=0.9)
+        cbar_ax = fig.add_axes([0.96, 0.15, 0.05, 0.7])
+        fig.colorbar(plot1, cax=cbar_ax).set_label(label=r'$I(\rho)/I(0)$',size=13)
+        fig.colorbar(plot1, cax=cbar_ax).ax.tick_params(labelsize=13) 
+
+
+        if BB_norm == True:
+        
+            wavel_BB, blackbody   = BB_v_Jy(wavel_MATISSE_flux*1E-6, BB_temperature, au_to_R_sun(stellar_radii), distance_target)
+            data2                 = FLUX_DATA/blackbody.astype('float')
+            MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+            MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        else:
+
+            data2                 = FLUX_DATA            
+            MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+            MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        
+        ax3.tick_params(axis='both', labelsize=15)
+        ax3.set_xlim(np.amin(W_LM),np.amax(W_LM))
+        ax3.set_ylim(0.5,1.5)
+        ax3.set_ylabel('Normalized Flux',fontsize =15)
+    
+        ax3.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_LM))], label = 'MATISSE')
+        ax3.minorticks_on()
+    
+        ax4.tick_params(axis='both', labelsize=15)
+        ax4.set_xlim(np.amin(W_N),np.amax(W_N))
+        ax4.set_ylim(0.5,1.5)
+        ax4.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_N))])
+        ax4.minorticks_on()
+
+    
+        handles, labels = [(a + b + c) for a, b, c in zip(ax1.get_legend_handles_labels(), ax2.get_legend_handles_labels(), ax3.get_legend_handles_labels())]
+        fig1=ax1.figure
+        fig1.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
+        
+        plt.setp(ax2.get_yticklabels(), visible=False)
+    
+        plt.savefig(PATH_OUTPUT_SPECTRA+'big_spectra_mutiplied_by_spectra.jpg',bbox_inches='tight', dpi=400)
+        plt.close(fig)
+        
+        # # CONTINUUM SUBSTRACTION
+        
+
+        # # Take the LM data
+        
+        # data_LM = READ_PRETTY_TABLE('C:/Users/jdrevon/Desktop/Github/RHAPSODY_new_test/RESULTAT/RESULTS/REG_TV_HP_1.0E+04/FIT_RESULTS/fit_flux_ratio_LM.dat' , 1)
+
+        
+        # max_ring_LM = data_LM[0][1:].astype('float')
+        # min_ring_LM = max_ring_LM-np.diff(max_ring_LM)[0]
+        
+        # wavel_LM = data_LM[1][:,0]
+        # flux_LM = data_LM[1][:,1:]
+        
+        # intensity_LM = flux_to_intensity(min_ring_LM, max_ring_LM, flux_LM).T
+        
+        # # Take the N data
+        
+        # data_N = READ_PRETTY_TABLE('C:/Users/jdrevon/Desktop/Github/RHAPSODY_new_test/RESULTAT/RESULTS/REG_TV_HP_1.0E+04/FIT_RESULTS/fit_flux_ratio_N.dat' , 1)
+
+        
+        # max_ring_N = data_N[0][1:].astype('float')
+        # min_ring_N = max_ring_N-np.diff(max_ring_N)[0]
+        
+        # wavel_N = data_N[1][:,0]
+        # flux_N = data_N[1][:,1:]
+        
+        # intensity_N = flux_to_intensity(min_ring_N, max_ring_N, flux_N).T
+        
+
+        # # CONVOLUTION BY THE SPECTRA:
+        
+        # from scipy.interpolate import interp1d
+
+        # # Interpolation of the intensity value of the science spectra using the resolution of the plot
+        
+        # # RESCALE 
+
+        # f_spectra = interp1d(FLUX_WAVEL, FLUX_DATA)
+                
+        # f_spectra_interp_LM = f_spectra(wavel_LM)
+        # f_spectra_interp_N = f_spectra(wavel_N)
+    
+        
+        # W_LM,D_LM=np.meshgrid(np.append(wavel_LM,wavel_LM[-1]+np.diff(wavel_LM)[-1]),np.append([0],max_ring_LM))
+        # W_N,D_N=np.meshgrid(np.append(wavel_N,wavel_N[-1]+np.diff(wavel_N)[-1]),np.append([0],max_ring_N))
+    
+    
+        # # RESCALE 
+        # widths  = [1,1]
+        # heights = [1,5]
+
+
+    
+        # mp   = cm.berlin
+        # rmap = mp
+        # # mp   = cm.lajolla
+        # # rmap = mp.reversed()
+        
+        # fig=plt.figure(figsize=(8, 12))
+        # gs1 = GridSpec(2, 2, width_ratios=widths, height_ratios=heights)
+        
+    
+        # ax1 = plt.subplot(gs1[1,0])
+        # ax2 = plt.subplot(gs1[1,1])
+    
+        # ax3 = plt.subplot(gs1[0,0])
+        # ax4 = plt.subplot(gs1[0,1])
+    
+        # intensity_LM = intensity_LM*f_spectra_interp_LM/np.amax(intensity_LM*f_spectra_interp_LM)
+        # intensity_LM = ((intensity_LM.T-intensity_LM[:,21]).T)/np.amax((intensity_LM.T-intensity_LM[:,21]).T)
+        # intensity_N = intensity_N*f_spectra_interp_N/np.amax(intensity_N*f_spectra_interp_N)
+        
+        # # plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM+1E-10),norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
+
+        # # plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),shading='auto', cmap=rmap)
+
+        # plot1=ax1.pcolor(W_LM,D_LM,np.array(intensity_LM),shading='auto', cmap=rmap, norm=colors.TwoSlopeNorm(vcenter=0.,vmax=0.05, vmin=-0.05))
+
+                
+        # ax1.minorticks_on()
+        # # rect=plt.Rectangle((3.05, 0), 0.25, 56,alpha=0.2, color='lightgrey')
+        # # ax1.add_patch(rect)
+        # # rect2=plt.Rectangle((3.75, 0), 0.25, 56,alpha=0.2, color='lightgrey')
+        # # ax1.add_patch(rect2)
+        # ax1.set_yscale('log')
+        # ax1.set_ylim(3,max(distance_N))
+        # ax1.yaxis.set_ticks_position('both')
+    
+        # ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
+        # ax1.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        # ax1.tick_params(axis='both', labelsize=13)
+        # ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
+        # ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        # plot2=ax2.pcolor(W_N,D_N,np.array(intensity_N)+1E-10,norm=colors.LogNorm(vmin=1E-4, vmax=1), cmap=rmap)
+        
+        # W_N_2,D_N_2=np.meshgrid(wavel_N,distance_N)
+    
+        # ax2.set_ylim(3,max(distance_N))
+        # ax2.minorticks_on()
+        # ax2.set_yscale('log')
+        # ax2.set_yticks([5,10,12,15,18,25,30,40,50,75,100])    
+        # ax2.yaxis.set_ticks_position('both')
+        # ax2.tick_params(axis='both', labelsize=13)
+        # ax2.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+        # fig.subplots_adjust(right=0.9)
+        # cbar_ax = fig.add_axes([0.96, 0.15, 0.05, 0.7])
+        # fig.colorbar(plot1, cax=cbar_ax).set_label(label=r'$I(\rho)/I(0)$',size=13)
+        # fig.colorbar(plot1, cax=cbar_ax).ax.tick_params(labelsize=13) 
+
+
+        # if BB_norm == True:
+        
+        #     wavel_BB, blackbody   = BB_v_Jy(wavel_MATISSE_flux*1E-6, BB_temperature, au_to_R_sun(stellar_radii), distance_target)
+        #     data2                 = FLUX_DATA/blackbody.astype('float')
+        #     MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+        #     MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        # else:
+
+        #     data2                 = FLUX_DATA            
+        #     MATISSE_flux_LM       = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>2,wavel_MATISSE_flux<5)])
+        #     MATISSE_flux_N        = data2/np.mean(data2[np.logical_and(wavel_MATISSE_flux>8,wavel_MATISSE_flux<12)])
+
+        
+        # ax3.tick_params(axis='both', labelsize=15)
+        # ax3.set_xlim(np.amin(W_LM),np.amax(W_LM))
+        # ax3.set_ylim(0.5,1.5)
+        # ax3.set_ylabel('Normalized Flux',fontsize =15)
+    
+        # ax3.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_LM))], label = 'MATISSE')
+        # ax3.minorticks_on()
+    
+        # ax4.tick_params(axis='both', labelsize=15)
+        # ax4.set_xlim(np.amin(W_N),np.amax(W_N))
+        # ax4.set_ylim(0.5,1.5)
+        # ax4.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux_N))])
+        # ax4.minorticks_on()
+
+    
+        # handles, labels = [(a + b + c) for a, b, c in zip(ax1.get_legend_handles_labels(), ax2.get_legend_handles_labels(), ax3.get_legend_handles_labels())]
+        # fig1=ax1.figure
+        # fig1.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
+        
+        # plt.setp(ax2.get_yticklabels(), visible=False)
+    
+        # plt.savefig(PATH_OUTPUT_SPECTRA+'big_spectra_mutiplied_by_spectra.jpg',bbox_inches='tight', dpi=400)
+

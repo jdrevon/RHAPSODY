@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 12 09:07:41 2021
@@ -43,10 +44,14 @@ def stock_V2_from_dico(OIFITS_TOT_LM, OIFITS_TOT_N):
         V2_tmp         = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['VIS2'].astype('float'))
         V2_err_tmp     = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['VIS2_ERR'].astype('float'))
 
+
+        
+        
         V2_TOT.append(ma.masked_array(V2_tmp,mask=flag))
         V2_ERR.append(ma.masked_array(V2_err_tmp,mask=flag))
         q_TOT.append(ma.masked_array(q_tmp,mask=flag))
         wavel_TOT.append(ma.masked_array(wavel_tmp,mask=flag))           
+        
         
     V2_TOT = ma.concatenate(V2_TOT)
     V2_ERR = ma.concatenate(V2_ERR)

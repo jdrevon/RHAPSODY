@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 24 14:35:42 2021
@@ -6,8 +7,6 @@ Created on Wed Mar 24 14:35:42 2021
 """
 from astropy.io import fits 
 import numpy as np
-from scipy.interpolate import interp1d
-import matplotlib.pyplot as plt
 
 def image_to_data_cube(images, x_axis , y_axis, wavel, PATH, CUBE_NAME):
         

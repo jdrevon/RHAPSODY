@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 12 10:58:06 2021
@@ -9,8 +10,14 @@ Created on Tue Oct 12 10:58:06 2021
     
 # Path of the folder containing all the OIFITS final calibrated files (LM+N):
 
-#MATISSE_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
-MATISSE_DIR = "C:/Users/jdrevon/Desktop/LNbands"
+#DATA_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
+
+DATA_DIR = "C:/Users/jdrevon/Desktop/R_for/DATA"
+
+# FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
+
+PROCESS_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY_Rfor/TEST/RFor"
+
 ############ PARALLELIZATION:
 
 # Number of telescopes used
@@ -23,14 +30,17 @@ nprocs = 8 # Nbr of cores
 
 ############ DATA ERROR BARS:
     
-ERROR_SUP = 0.02 
+ERROR_SUP_LM = 0.03
+
+ERROR_SUP_N  = 0.03
+
 # Does the error bar on visibilities seems underestimated? 
 #The real error bars are replaced by np.sqrt(V2_err**2+ERROR_SUP**2) during the computation! 
 # The OIFITS files are not modified
 
 ############ DATA WVL ranges
 
-MATISSE_L_BAND_min = 2.8   #µm
+MATISSE_L_BAND_min = 2.96   #µm
 MATISSE_L_BAND_max = 4.0   #µm
 
 MATISSE_N_BAND_min = 8.5   #µm
@@ -54,7 +64,7 @@ alpha_N      = .2   # alpha_N  [#] : Power law of the initial guess intensity pr
 # For G profile:
     
 sigma_LM     = 5    # sigma_LM [mas] : Standard deviation of the intensity profile for LM band 
-sigma_N      = 15   # sigma_N  [mas] : Standard deviation of the intesnity profile for N band 
+sigma_N      = 10   # sigma_N  [mas] : Standard deviation of the intesnity profile for N band 
 
 ########### Method of Regularization: 
 
@@ -67,7 +77,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [1E4] # µ
+HP = [1E0,1E1,1E2,1E3,2E3,4E3,6E3,8E3,1E4,1E5] # µ
 
 ########### Fitting Parameters:
     
@@ -75,7 +85,7 @@ HP = [1E4] # µ
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
 fitting_method  = 'COBYLA' 
-tolerance       = 5E-4 # 5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
+tolerance       = 5E-3 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
 max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergence
 
 
@@ -130,7 +140,7 @@ FITTING = True
 BB_norm = True 
 
 BB_temperature = 2700 # Kelvins
-distance_target = 361 #pc
-stellar_radii = 1.91 # AU
+distance_target = 632 #pc
+stellar_radii = 3 # AU
 
 

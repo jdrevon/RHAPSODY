@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb  3 15:01:53 2021
@@ -7,7 +8,7 @@ Created on Wed Feb  3 15:01:53 2021
 
 import numpy as np
 
-from rhapsody_init import model_rho_LM, model_rho_N, REG_method, max_iterations, tolerance, nprocs
+from rhapsody_init import REG_method, max_iterations, tolerance, nprocs
 from lmfit import minimize as minim
 from lmfit import Parameters,fit_report
 from model_visibilities import V_uniform, V_ring
@@ -17,8 +18,6 @@ from f_prior import total_variation, quad_smoothness
 from plot_hist import plot_histogram
 from prettytable import PrettyTable
 import multiprocessing as mp
-
-import matplotlib.pyplot as plt
 
 def short_model(params,q_UD_fitting, V2_MATISSE, V2_MATISSE_ERR, HP, V_model, REG_method, intensity_init, flux_init):
     
@@ -155,7 +154,7 @@ def fitting_function(i, wavel_UD, wavel_TOT, HP, diam_UD_tmp, \
 
         if nb_UD>1 :
             D_number = N-nb_UD 
-            chi2_red=chi2_tmp/D_number
+            chi2_red= np.abs(chi2_tmp/D_number)
             
         else:
             None
@@ -280,6 +279,8 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
     
     # OK LET'S GO FIT: DON'T STOP ME NOW !
 
+    print('STARTING FITTING')
+
     
     pool = mp.Pool(processes=nprocs)    
         
@@ -317,13 +318,19 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
             I_tot_N[i_N] = I_tot[ind]
             i_N = i_N+1
 
+    print('END OF FITTING')
 
     # TABLE OF FLUX
+
+    print('GENERATING FLUX TABLE')
 
     with open(PATH_OUTPUT_FIT_RES+'fit_flux_ratio_LM.dat', 'w') as f: f.write(str(table_res_fit_LM))
     with open(PATH_OUTPUT_FIT_RES+'fit_flux_ratio_N.dat', 'w') as f: f.write(str(table_res_fit_N))
 
     # TABLE OF INTENSITY
+    
+    print('GENERATING INTENSITY TABLE')
+    
     wavel_UD = np.array(wavel_UD)
     data_intensity = PrettyTable()
     column_names_I = ["rho_ext"]+[str(np.round(wavel_UD[wavel_UD<6][i],5)) for i in range(len(I_tot_LM))]
@@ -339,8 +346,10 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
         data_intensity.add_column(column_names_I[i+1],I_tot_N[i])
     with open(PATH_OUTPUT_FIT_RES+'intensity_N.dat', 'w') as f: f.write(str(data_intensity))
 
-
     # ALL LMFIT REPORT
+
+    print('GENERATING FITTING REPORT')
+
 
     with open(PATH_OUTPUT_FIT_RES+ 'resultat_fitting_rings'+'.txt', "w+") as att_file:
         for ind in range(len(wavel_UD)):
@@ -348,6 +357,9 @@ def UD_modeling(wavel_UD,wavel_TOT, q_TOT, V2_TOT, V2_ERR,\
             att_file.write(fit_report(resultat[ind]) + '\n')
 
     # ALL CHI2 REPORT
+
+    print('GENERATING CHI2 TABLE')
+
         
     data_chi2 = PrettyTable()
     data_chi2.field_names = ['Wavel', 'chi2', 'chi2_red', 'f_prior_'+REG_method, 'chi2_tot']

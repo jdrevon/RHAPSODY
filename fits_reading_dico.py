@@ -12,9 +12,8 @@ import glob
 from A7_rad_to_deg import rad_to_deg
 from A8_PA_flag_new import flag_PA_new
 import shutil
-from rhapsody_init import MATISSE_DIR, ntelescope
+from rhapsody_init import PROCESS_DIR, ntelescope
 from data_flag import FLAG_DATA
-from data_flag_flux import FLUX_FLAG
 
 def OIFITS_SORTING():
     
@@ -28,7 +27,7 @@ def OIFITS_SORTING():
     the routine will
     
     2) Then the routine will create subdirectories in the folder where the data are located and will move the fits file in the corresponding subdirectories.
-       MATISSE_DIR_LM for the LM-band data, MATISSE_DIR_N for the N-band data and MATISSE_DIR_TRASH for the bad fits file according to the FLAGs.
+       PROCESS_DIR_LM for the LM-band data, PROCESS_DIR_N for the N-band data and PROCESS_DIR_TRASH for the bad fits file according to the FLAGs.
        
     3) Then, a second sorting based on the flux will be executed to keep only the best quality data set.
      
@@ -36,59 +35,61 @@ def OIFITS_SORTING():
     
     print('START FLAGGING')
 
+
     FLAG_DATA()
 
     print('CREATING NEW DIRECTORIES')
 
-    MATISSE_DIR_LM      = MATISSE_DIR + '/LM' 
-    MATISSE_DIR_N       = MATISSE_DIR + '/N'
-    MATISSE_DIR_TRASH   = MATISSE_DIR + '/TRASH'
+    PROCESS_DIR_LM      = PROCESS_DIR + '/LM' 
+    PROCESS_DIR_N       = PROCESS_DIR + '/N'
+    PROCESS_DIR_TRASH   = PROCESS_DIR + '/TRASH'
 
 
     # move file in correct folder
-    if not os.path.exists(MATISSE_DIR_LM):
-        os.makedirs(MATISSE_DIR_LM)
-    if not os.path.exists(MATISSE_DIR_N):
-        os.makedirs(MATISSE_DIR_N)
+    if not os.path.exists(PROCESS_DIR_LM):
+        os.makedirs(PROCESS_DIR_LM)
+    if not os.path.exists(PROCESS_DIR_N):
+        os.makedirs(PROCESS_DIR_N)
 
-    if not os.path.exists(MATISSE_DIR_TRASH):
-        os.makedirs(MATISSE_DIR_TRASH)
+    if not os.path.exists(PROCESS_DIR_TRASH):
+        os.makedirs(PROCESS_DIR_TRASH)
 
     
-    for filenames in glob.glob(MATISSE_DIR+'/*.fits'):
+    for filenames in glob.glob(PROCESS_DIR+'/*.fits'):
 
         with fits.open(filenames, memmap=False) as fichier:
             FLAG = False
             
             try: 
                 FLUX_MATISSE_data = fichier['OI_FLUX'].data['FLUXDATA']
-                V2Flag_fichier= fichier["OI_VIS2"].data["FLAG"]
-                if np.logical_or(np.where(V2Flag_fichier == False)[0].size == 0, np.where(FLUX_MATISSE_data<0)[0].size !=0):
+                V2Flag_fichier= fichier["OI_VIS2"].data["FLAG"]                
+
+                if np.logical_or(np.where(V2Flag_fichier == False)[0].size == 0, np.where(FLUX_MATISSE_data[:,np.where(V2Flag_fichier[0]==False)]<0)[0].size !=0):
                     FLAG = True
-                    
+
             except : 
                 FLAG = True
 
             fichier.close()
             if FLAG == True:
                 
-                shutil.move(filenames,MATISSE_DIR_TRASH+'/')                
+                shutil.move(filenames,PROCESS_DIR_TRASH+'/')                
                             
             elif np.logical_and(FLAG == False,'IR-N' in filenames):
-                shutil.move(filenames,MATISSE_DIR_N+'/')
+                shutil.move(filenames,PROCESS_DIR_N+'/')
             
             elif np.logical_and(FLAG == False,'IR-LM' in filenames):                   
-                shutil.move(filenames,MATISSE_DIR_LM+'/')
+                shutil.move(filenames,PROCESS_DIR_LM+'/')
 
 
-    list_files_LM = (glob.glob(MATISSE_DIR_LM+'/*.fits'))
-    list_files_N = (glob.glob(MATISSE_DIR_N+'/*.fits'))
+    list_files_LM = (glob.glob(PROCESS_DIR_LM+'/*.fits'))
+    list_files_N = (glob.glob(PROCESS_DIR_N+'/*.fits'))
     count_N = 0
     count_LM = 0
     OIFITS_TOT_LM = np.zeros(len(list_files_LM), dtype = 'object')
     OIFITS_TOT_N = np.zeros(len(list_files_N), dtype = 'object')
 
-    list_files = (glob.glob(MATISSE_DIR_LM+'/*.fits')+ glob.glob(MATISSE_DIR_N+'/*.fits'))
+    list_files = (glob.glob(PROCESS_DIR_LM+'/*.fits')+ glob.glob(PROCESS_DIR_N+'/*.fits'))
 
     print('START READING DATA FOR FLUX SORTING')
     for filenames in list_files:
@@ -106,6 +107,8 @@ def OIFITS_SORTING():
 
 
             # CLOSURE PHASE            
+            
+            # print(filenames)
             
             U1 = fichier["OI_T3"].data["U1COORD"]
             U2 = fichier["OI_T3"].data["U2COORD"]
@@ -177,10 +180,7 @@ def OIFITS_SORTING():
                 
                 OIFITS_TOT_LM[count_LM]   = dic
                 count_LM = count_LM+1
-        
-    print('STARTING FLUX SORTING')
-    FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N, False)
-    
+            
     return
     
 
@@ -207,15 +207,15 @@ def OIFITS_READING_complete():
 
     telescope = ntelescope
 
-    MATISSE_DIR_LM      = MATISSE_DIR + '/LM' 
-    MATISSE_DIR_N       = MATISSE_DIR + '/N'
+    PROCESS_DIR_LM      = PROCESS_DIR + '/LM' 
+    PROCESS_DIR_N       = PROCESS_DIR + '/N'
                 
     try:
-        list_files_LM = (glob.glob(MATISSE_DIR_LM+'/*.fits'))
+        list_files_LM = (glob.glob(PROCESS_DIR_LM+'/*.fits'))
     except: 
         list_files_LM = []
     try :
-        list_files_N = (glob.glob(MATISSE_DIR_N+'/*.fits'))
+        list_files_N = (glob.glob(PROCESS_DIR_N+'/*.fits'))
     except: 
         list_files_N = []
 
@@ -430,15 +430,15 @@ def OIFITS_READING():
 
     telescope = ntelescope
 
-    MATISSE_DIR_LM      = MATISSE_DIR + '/LM' 
-    MATISSE_DIR_N       = MATISSE_DIR + '/N'
+    PROCESS_DIR_LM      = PROCESS_DIR + '/LM' 
+    PROCESS_DIR_N       = PROCESS_DIR + '/N'
                 
     try:
-        list_files_LM = (glob.glob(MATISSE_DIR_LM+'/*.fits'))
+        list_files_LM = (glob.glob(PROCESS_DIR_LM+'/*.fits'))
     except: 
         list_files_LM = []
     try :
-        list_files_N = (glob.glob(MATISSE_DIR_N+'/*.fits'))
+        list_files_N = (glob.glob(PROCESS_DIR_N+'/*.fits'))
     except: 
         list_files_N = []
 
