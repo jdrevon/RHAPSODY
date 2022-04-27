@@ -24,11 +24,9 @@ def normalized_brightness_R(rho, inner_diam, outter_diam):
     
     if inner_diam == 0:
         I_UD = normalized_brightness_UD(rho,outter_diam)        
-    
     else : 
         cond  = ((rho>inner_diam/2) & (rho<=outter_diam/2)) # fonction porte
         I_UD[cond] += 4/(np.pi*((outter_diam)**2-(inner_diam)**2))
-    
     return I_UD
 
 

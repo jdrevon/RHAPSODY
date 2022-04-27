@@ -9,7 +9,7 @@ import numpy as np
 from rhapsody_init import ntelescope
 
 
-def FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N):
+def FLUX_FLAG(OIFITS_TOT):
     
     if ntelescope == 2:
 
@@ -23,87 +23,61 @@ def FLUX_FLAG(OIFITS_TOT_LM, OIFITS_TOT_N):
     
         AT=['AT1','AT2','AT3','AT4']
     
+        
     # What we want is to make statistics per AT on the flux to flag all the flux data
     # So we will stock all the data per AT make the median of all the flux in order to have N median spectras for the N AT's 
     
     
-    # We start looping over the AT's
-    
-    FLUX_LM      = np.zeros((len(OIFITS_TOT_LM),ntelescope,len(OIFITS_TOT_LM[0]['WAVEL'])))
-    FLUX_N       = np.zeros((len(OIFITS_TOT_N),ntelescope,len(OIFITS_TOT_N[0]['WAVEL'])))
-    
-    wavel_LM      = np.zeros((len(OIFITS_TOT_LM),ntelescope,len(OIFITS_TOT_LM[0]['WAVEL'])))
-    wavel_N       = np.zeros((len(OIFITS_TOT_N),ntelescope,len(OIFITS_TOT_N[0]['WAVEL'])))
-    
-    j=0
+    # I initiate the array which will contain the information for each band, for each ATs, the flux and the wavelengths values associated.    
 
-    for item in AT:
-         
-        for i in range(len(OIFITS_TOT_LM)):
-            
-            # I select the flux data from the i-th AT
-            AT_index = np.where(OIFITS_TOT_LM[i]['FLUX']['AT_NUMBER']==item)[0][0]
-            
-            # Once I have the correspond index of the flux from AT over the N arrays of flux I will stock the values in FLUX_LM[i][j][:]
-            # So in the first loop AT1 values will be stocked in the first slot of the FLUX_LM array.
-                        
-            FLUX_LM[i][j][:]  = OIFITS_TOT_LM[i]['FLUX']['FLUX'][AT_index]
-            
-            wavel_LM[i][j][:] = OIFITS_TOT_LM[i]['FLUX']['WAVEL'][AT_index]
+
+    for k in range(len(OIFITS_TOT)): # Loop over all the bandwidth 
+
+        FLUX_stock = [np.zeros((len(OIFITS_TOT[k]),ntelescope,len(OIFITS_TOT[k][0]['WAVEL'])), dtype=object) for i in range(len(OIFITS_TOT))]
+        WAVEL_stock = [np.zeros((len(OIFITS_TOT[k]),ntelescope,len(OIFITS_TOT[k][0]['WAVEL'])), dtype=object) for i in range(len(OIFITS_TOT))]
+    
+        for j in range(len(AT)): # Loop over the ATs of the k-th bandwidth
+    
+            for i in range(len(OIFITS_TOT[k])): # Loop over the files of the k-th bandwidth 
                 
-        for i in range(len(OIFITS_TOT_N)):
-            
-            # Same as above for N-band
+                # I select the flux data from the j-th AT of the k-th BAND in the i-th file
+                
+                AT_index = np.where(OIFITS_TOT[k][i]['FLUX']['AT_NUMBER']==AT[j])[0][0]
+                
+                # Once I have the correspond index of the flux from AT over the N arrays of flux I will stock the values in FLUX_LM[i][j][:]
+                # So in the first loop AT1 values will be stocked in the first slot of the FLUX_LM array.
+                            
+                FLUX_stock[k][i][j]  = OIFITS_TOT[k][i]['FLUX']['FLUX'][AT_index]
+                
+                WAVEL_stock[k][i][j] = OIFITS_TOT[k][i]['FLUX']['WAVEL'][AT_index]
 
-            # I select the flux data from the i-th AT
-            AT_index = np.where(OIFITS_TOT_N[i]['FLUX']['AT_NUMBER']==item)[0][0]
-            
-            # Once I have the correspond index of the flux from AT over the N arrays of flux I will stock the values in FLUX_LM[i][j][:]
-            # So in the first loop AT1 values will be stocked in the first slot of the FLUX_LM array.
-                        
-            FLUX_N[i][j][:]  = OIFITS_TOT_N[i]['FLUX']['FLUX'][AT_index]
-            
-            wavel_N[i][j][:] = OIFITS_TOT_N[i]['FLUX']['WAVEL'][AT_index]           
-        
-        FLUX_N_median  = np.median(np.array(FLUX_N),axis=0)
-        FLUX_LM_median = np.median(np.array(FLUX_LM),axis=0)
-    
-        FLUX_N_std  = np.median(np.abs(np.array(FLUX_N)-FLUX_N_median),axis=0)*1.48
-        FLUX_LM_std = np.median(np.abs(np.array(FLUX_LM)-FLUX_LM_median),axis=0)*1.48
-
-
-        print('SORTING LM BAND FOR '+ item)
-        
-        for file in OIFITS_TOT_LM:
-
-            AT_index = np.where(OIFITS_TOT_LM[i]['FLUX']['AT_NUMBER']==item)[0][0]
-
-            cond = np.logical_or(file['FLUX']['FLUX'][AT_index]>=FLUX_LM_median[j]+2*FLUX_LM_std[j],\
-                                  file['FLUX']['FLUX'][AT_index]<=FLUX_LM_median[j]-2*FLUX_LM_std[j])
-
-
-            file['FLUX']['FLAG'][AT_index] = cond | file['FLUX']['FLAG'][AT_index]
                 
 
-        print('END SORTING LM BAND FOR '+ item)
-        print('SORTING N BAND FOR '+ item)
+            # Now it's time to start to make statistics on the flux for each band data that we have stocked  for a given AT
+            # We take for each band the median value at a given AT and compute the standard deviation
+            # Then we can compare each flux value for each file of each bands and reflag
+            
+            # I want to make the median over the flux from the k-th band with the j-th telescope
+            
+            FLUX_median  = np.median(np.array(FLUX_stock[k]),axis=1)
+            FLUX_std     = np.median(np.abs(np.array(FLUX_stock[k])-FLUX_median[k]),axis=1)*1.48
 
+            # Now we have to loop over each file one more time to change the FLAG accordingly to the following conditions written in the variable cond            
 
-        for file in OIFITS_TOT_N:
-
-            AT_index = np.where(OIFITS_TOT_N[i]['FLUX']['AT_NUMBER']==item)[0][0]
-
-            cond = np.logical_or(file['FLUX']['FLUX'][AT_index]>=FLUX_N_median[j]+2*FLUX_N_std[j],\
-                                  file['FLUX']['FLUX'][AT_index]<=FLUX_N_median[j]-2*FLUX_N_std[j])
-
-
-            file['FLUX']['FLAG'][AT_index] = cond | file['FLUX']['FLAG'][AT_index]
-                
+            for file in OIFITS_TOT[k]:
     
-        print('END SORTING N BAND FOR '+ item)
-        
-        j=j+1
+                AT_index = np.where(file['FLUX']['AT_NUMBER']==AT[j])[0][0]
+    
+                cond = np.logical_or(file['FLUX']['FLUX'][AT_index]>=FLUX_median[j]+2*FLUX_std[j],\
+                                      file['FLUX']['FLUX'][AT_index]<=FLUX_median[j]-2*FLUX_std[j])
+    
+    
+                file['FLUX']['FLAG'][AT_index] = cond | file['FLUX']['FLAG'][AT_index]
+                    
+    
+            print('END SORTING BAND FOR '+ AT[j])
+
 
     
 
-    return OIFITS_TOT_LM, OIFITS_TOT_N
+    return OIFITS_TOT

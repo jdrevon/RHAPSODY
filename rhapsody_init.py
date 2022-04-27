@@ -8,15 +8,19 @@ Created on Tue Oct 12 10:58:06 2021
 
 ############ DIRECTORIES:
     
-# Path of the folder containing all the OIFITS final calibrated files (LM+N):
+# Path of the folder containing all the OIFITS final calibrated files:
+#Ex: 
+    #DATA_DIR = ["C:/Users/jdrevon/Desktop/Article R Scl/R_Scl2/LM",
+#         "C:/Users/jdrevon/Desktop/Article R Scl/R_Scl2/N"] #Path for all the different bands
 
-#DATA_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY/TEST/NOMEANBCD"
 
-DATA_DIR = "C:/Users/jdrevon/Desktop/R_for/DATA"
+DATA_DIR = ["C:/Users/jdrevon/Desktop/SIMULATION/WITH LAYER/DIVIDED_BY_10/N"] #Path for all the different bands
 
 # FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
 
-PROCESS_DIR = "C:/Users/jdrevon/Desktop/Github/RHAPSODY_Rfor/TEST/RFor"
+# PROCESS_DIR = "C:/Users/jdrevon/Desktop/SIMULATION/R_Scl"
+
+PROCESS_DIR = "C:/Users/jdrevon/Desktop/SIMULATION/WITH LAYER/DIVIDED_BY_10/N"
 
 ############ PARALLELIZATION:
 
@@ -28,43 +32,72 @@ ntelescope = 4
     
 nprocs = 8 # Nbr of cores 
 
-############ DATA ERROR BARS:
-    
-ERROR_SUP_LM = 0.03
+############ DATA WVL ranges
+#Ex:
+# DATA_band_name = ['LM','N'] 
+# DATA_band_min  = [2.96,8.50]  #µm  
+# DATA_band_max  = [4.00,12.50] #µm
 
-ERROR_SUP_N  = 0.03
+DATA_band_name = ['N'] 
+DATA_band_min  = [8.50]  #µm 
+DATA_band_max  = [12.50] #µm
+
+############ DATA:
+
+# Pass the OIFITS data in the REFLAGGING routine to make a more robust flag
+# This are the flagin criteria that we are using:
+# We do not recommand this on data with very high error bars.
+
+# vis    = np.sqrt(np.abs(VIS2)) * np.sign(VIS2)
+# viserr = 0.5* VIS2ERR / (vis+(vis==0));
+
+# flag = (vis > 0. - viserr) &\
+#        (vis < 1. + viserr) &\
+#        (vis > -0.1)         &\
+#        (vis < 1.1)          &\
+#        (viserr > 0)         &\
+#        (viserr < 0.1)    #   &\
+
+REFLAGGING_DATA = False
+
 
 # Does the error bar on visibilities seems underestimated? 
 #The real error bars are replaced by np.sqrt(V2_err**2+ERROR_SUP**2) during the computation! 
 # The OIFITS files are not modified
+    
+# ERROR_SUP = [0.03,0.03]
 
-############ DATA WVL ranges
+ERROR_SUP = [0.00]
 
-MATISSE_L_BAND_min = 2.96   #µm
-MATISSE_L_BAND_max = 4.0   #µm
+# FLUX
+# Is the OIFITS_FLUX table is provided in the data? If Yes, please set True, if not set False
 
-MATISSE_N_BAND_min = 8.5   #µm
-MATISSE_N_BAND_max = 12.5   #µm
+OIFITS_FLUX = False
+
 
 ########### RINGS:
 
-size_ring_LM = 2   # size_ring_LM [mas] : constant width of a ring (outter diameter-inner diameter) in LM band
-size_ring_N  = 5   # size_ring_LM [mas] : constant width of a ring (outter diameter-inner diameter) in N band
+# size_ring = [2,5]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+# NBR_ring  = [56,60] # NBR_ring [#] : number of rings to put in the model for the different bands
 
-NBR_ring_LM  = 56   # NBR_ring_LM [#] : number of rings to put in the model in LM band
-NBR_ring_N   = 60   # NBR_ring_N  [#] : number of rings to put in the model in N band
+
+size_ring = [5]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+NBR_ring  = [60]     # NBR_ring [#] : number of rings to put in the model for the different bands
 
 init = 'G' # G for Gaussian like profile, PW for power-law like profile
 
 # For PW profile:
 
-alpha_LM     = .2   # alpha_LM [#] : Power law of the intensity profile for LM band (1/r**(alpha))
-alpha_N      = .2   # alpha_N  [#] : Power law of the initial guess intensity profile for N band (1/r**(alpha))
+# alpha  = [.2,.2] # alpha [#] : Power law of the intensity profile for each bands (1/r**(alpha))
+
+alpha  = [.2] # alpha [#] : Power law of the intensity profile for each bands (1/r**(alpha))
 
 # For G profile:
     
-sigma_LM     = 5    # sigma_LM [mas] : Standard deviation of the intensity profile for LM band 
-sigma_N      = 10   # sigma_N  [mas] : Standard deviation of the intesnity profile for N band 
+# sigma = [5,10]    # sigma [mas] : Standard deviation of the intensity profile for each bands 
+
+sigma = [7]    # sigma [mas] : Standard deviation of the intensity profile for each bands 
+
 
 ########### Method of Regularization: 
 
@@ -77,7 +110,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [1E0,1E1,1E2,1E3,2E3,4E3,6E3,8E3,1E4,1E5] # µ
+HP = [1] # µ
 
 ########### Fitting Parameters:
     
@@ -85,31 +118,27 @@ HP = [1E0,1E1,1E2,1E3,2E3,4E3,6E3,8E3,1E4,1E5] # µ
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
 fitting_method  = 'COBYLA' 
-tolerance       = 5E-3 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
+tolerance       = 8E-4 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
 max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergence
 
 
 ########### Set the resolution of the modeled curve for the plot:
 
-# L-band    
+# model_q_min = [None, None] # [rad^-1] If None the model boundaries takes the minimum of the spatial frequency covered by the instrument in the given bands
+# model_q_max = [None, None] # [rad^-1] If None the model boundaries takes the maximum of the spatial frequency covered by the instrument in the given bands
+# model_q     = [1000, 1000] # Number of points in the model for each bands
 
-model_q_min_LM   = None # [rad^-1] If None the model boundaries takes the minimum of the spatial frequency covered by the instrument
-model_q_max_LM   = None # [rad^-1] If None the model boundaries takes the maximum of the spatial frequency covered by the instrument
-model_q_LM       = 1000   # Number of points in the model  
+# model_rho_min = [None, None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
+# model_rho_max = [None, None] # [rad^-1] If None the intensity profile ends at the model edges
+# model_rho     = [1000, 1000] # Number of points in the model for each bands
 
-model_rho_min_LM   = None # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
-model_rho_max_LM   = None # [rad^-1] If None the intensity profile ends at the model edges
-model_rho_LM       = 1000  # Number of points in the model  
+model_q_min = [None] # [rad^-1] If None the model boundaries takes the minimum of the spatial frequency covered by the instrument in the given bands
+model_q_max = [None] # [rad^-1] If None the model boundaries takes the maximum of the spatial frequency covered by the instrument in the given bands
+model_q     = [1000] # Number of points in the model for each bands
 
-# N-band    
-
-model_q_min_N   = None # [rad^-1] If None the model boundaries takes the minimum of the spatial frequency covered by the instrument
-model_q_max_N   = None # [rad^-1] If None the model boundaries takes the maximum of the spatial frequency covered by the instrument
-model_q_N       = 1000    # Number of points in the model  
-
-model_rho_min_N   = None # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
-model_rho_max_N   = None # [rad^-1] If None the intensity profile ends at the model edges
-model_rho_N       = 1000  # Number of points in the model  
+model_rho_min = [None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
+model_rho_max = [None] # [rad^-1] If None the intensity profile ends at the model edges
+model_rho     = [1000] # Number of points in the model for each bands
 
 
 ########### OPTIONNAL FEATURES PARAMETERS:

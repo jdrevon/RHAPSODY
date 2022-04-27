@@ -8,6 +8,7 @@ Created on Tue Jan 19 09:39:37 2021
 
 import numpy as np
 from scipy.interpolate import interp1d
+from scipy import interpolate
 
 
 def imaging_model(rho,I_profile, R_image, **kwargs):
@@ -15,11 +16,8 @@ def imaging_model(rho,I_profile, R_image, **kwargs):
     method        = kwargs.get('method', 'linear')    
 
     
-    # image_TOT = []
     xv = np.linspace(-R_image, R_image, len(rho)*2, endpoint=False) # Taille de la fenetre
-    # WARNING
-    if np.sqrt(R_image**2+R_image**2)>=max(rho):
-        print('WARNING points out of the computation range are needed to display the image, they are set to 0')
+
     interpol_index = interp1d(rho, I_profile,kind=method)    
     X, Y = np.meshgrid(xv, xv)
     profilegrid2 = np.zeros(X.shape, float)
@@ -27,20 +25,7 @@ def imaging_model(rho,I_profile, R_image, **kwargs):
     cond=np.logical_and(current_radius<=max(rho),current_radius>=min(rho)) # Min et max des données
     profilegrid2[cond] = interpol_index(current_radius[cond])    
 
-    # image_TOT.append(profilegrid2)             
-
-    # plt.figure()
-    # plt.imshow(profilegrid2,extent=[-R_image,R_image,-R_image,R_image])
-    # plt.xlabel(r'$\alpha$ [mas]')
-    # plt.ylabel(r'$\delta$ [mas]')
-    # plt.colorbar(label=r'Intensity Ratio [I_tot/I_star]')
-    # plt.title('Image of the model at %.2f µm'%wavel_UD)    
     return xv, profilegrid2  
-
-import math
-from scipy.interpolate import griddata, interp1d, interp2d
-import matplotlib.pyplot as plt
-from scipy import interpolate
 
 
 def image_increase_resolution(x,y,image,factor):
@@ -69,26 +54,14 @@ def radial_profile_image(x,y,image,**kwargs):
     r_interp_min        = kwargs.get('r_interp_min', 0)    
     r_interp_nb         = kwargs.get('r_interp_nb', 500)    
 
-    # x0 = x[np.where(image==np.amax(image))[0]][0]
-    # y0 = y[np.where(image==np.amax(image))[1]][0]
-
     x0 = x[np.unique(np.where(image==np.amax(image))[0])[int(len(np.unique(np.where(image==np.amax(image))[0]))/2)]]
     y0 = y[np.unique(np.where(image==np.amax(image))[1])[int(len(np.unique(np.where(image==np.amax(image))[1]))/2)]]
-
-    # print(x0,y0)
-    # print(np.unique(np.where(image==np.amax(image))[0])[int(len(np.unique(np.where(image==np.amax(image))[0]))/2)],\
-    #       np.unique(np.where(image==np.amax(image))[1])[int(len(np.unique(np.where(image==np.amax(image))[1]))/2)])
-
-    # XX,YY = np.meshgrid(x-x0,y-y0)
-
-    # XX,YY = np.meshgrid((x-x0),(y-y0))
 
     XX,YY = np.meshgrid((x-x0),(y-y0))
     
     TT_0 = np.arctan2(YY,XX)
     TT = np.rad2deg(TT_0)
     RR = np.sqrt(XX**2+YY**2)
-    # r_interp =  np.linspace(-30,30,100)
     
     r_interp =  np.linspace(r_interp_min,r_interp_max,r_interp_nb,endpoint=False)
     theta_interp = np.linspace(-180,180,len(r_interp),endpoint=False) 
@@ -98,28 +71,7 @@ def radial_profile_image(x,y,image,**kwargs):
     interp = np.reshape(interpolate.griddata((RR.ravel(), TT.ravel()), image.ravel(), (RR_fit.ravel(), TT_fit.ravel()), method='linear'),np.shape(RR_fit))
     
     radial_profile = np.nanmean(interp,axis=0)
-    std_deviation  = np.nanstd(interp,axis=0)
-    
-    # import matplotlib
-    
-    # plt.figure()
-    # plt.pcolormesh(RR_fit,TT_fit, interp,norm=matplotlib.colors.LogNorm())
-    # plt.colorbar()
-    # plt.title('Radial Transform of interpolation')
-
-
-    # plt.figure()
-    # plt.pcolormesh(RR,TT, image)
-    # plt.colorbar()
-    # plt.title('Radial Transform of raw image')
-
-    
-    # plt.figure()
-    # plt.imshow(image,extent=[min(x-x0),max(x-x0),min(np.flip(y)-y0),max(np.flip(y)-y0)])
-    
-    # plt.figure()
-    # plt.plot(r_interp,test)    
-        
+    std_deviation  = np.nanstd(interp,axis=0)        
    
     return r_interp, radial_profile, std_deviation
 
@@ -128,14 +80,6 @@ def radial_properties_image(x,y,image,radial_list):
     
     x0 = x[np.unique(np.where(image==np.amax(image))[0])[int(len(np.unique(np.where(image==np.amax(image))[0]))/2)]]
     y0 = y[np.unique(np.where(image==np.amax(image))[1])[int(len(np.unique(np.where(image==np.amax(image))[1]))/2)]]
-
-    # print(x0,y0)
-    # print(np.unique(np.where(image==np.amax(image))[0])[int(len(np.unique(np.where(image==np.amax(image))[0]))/2)],\
-    #       np.unique(np.where(image==np.amax(image))[1])[int(len(np.unique(np.where(image==np.amax(image))[1]))/2)])
-
-    # XX,YY = np.meshgrid(x-x0,y-y0)
-
-    # XX,YY = np.meshgrid((x-x0),(y-y0))
 
     XX,YY = np.meshgrid((x-x0),(y-y0))
     
@@ -165,7 +109,6 @@ from A6_nearest_index import nearest_index
 
 def increase_intensity_resolution(FILE_PATH_FLUX, len_UD, wavel_um):
     
-        # FILE_PATH_FLUX = 'C:/Users/jdrevon/partage/THESE/Modeling/UD_modeling/Resultats/REG_HP_1E4/FIT_RESULTS/fit_flux_ratio_LM.dat'
         header,data = READ_PRETTY_TABLE(FILE_PATH_FLUX,1)
 
         

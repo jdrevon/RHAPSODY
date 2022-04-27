@@ -10,61 +10,60 @@ Created on Fri Oct  9 15:52:31 2020
 from astropy.io import fits
 import numpy as np
 import glob
-from rhapsody_init import PROCESS_DIR, MATISSE_L_BAND_min, MATISSE_L_BAND_max, MATISSE_N_BAND_min, MATISSE_N_BAND_max
-
+from rhapsody_init import PROCESS_DIR, DATA_band_name, DATA_band_min, DATA_band_max, OIFITS_FLUX, REFLAGGING_DATA
+import sys
 def FLAG_DATA():
 
-    for filenames in glob.glob(PROCESS_DIR+'/*.fits'):
+    for k in range(len(DATA_band_name)):
     
-        # print(filenames)
+        for filenames in glob.glob(PROCESS_DIR+'/'+DATA_band_name[k]+'/*.fits'):
+                    
+            wlmin = DATA_band_min[k]*1E-6
+            wlmax = DATA_band_max[k]*1E-6
+                    
+        
+            with fits.open(filenames, memmap=False, mode='update') as fichier:
     
-        if 'IR-LM' in filenames:
-            
-            wlmin = MATISSE_L_BAND_min*1E-6
-            wlmax = MATISSE_L_BAND_max*1E-6
-        
-        elif 'IR-N' in filenames:
-            
-            wlmin = MATISSE_N_BAND_min*1E-6
-            wlmax = MATISSE_N_BAND_max*1E-6
+                # print(filenames)
+                # name = np.zeros(len(data), dtype=object)
+                # for i in range(len(data)):
+                #     name[i] = data[i].name
     
-        with fits.open(filenames, memmap=False, mode='update') as data:
-
-        # data=fits.open(filenames, mode='update', memmap=False)
-
-        
-            try:
-        
-                WLEN = data['OI_WAVELENGTH'].data['EFF_WAVE']
-        
+                # data=fits.open(filenames, mode='update', memmap=False)
+    
                 # Read data
-                
-                VIS2     = data['OI_VIS2'].data['VIS2DATA']
-                VIS2ERR  = data['OI_VIS2'].data['VIS2ERR']
+                VIS2     = fichier['OI_VIS2'].data['VIS2DATA']
+                VIS2ERR  = fichier['OI_VIS2'].data['VIS2ERR']
+                WLEN = np.array([fichier['OI_WAVELENGTH'].data['EFF_WAVE']]*np.shape(VIS2)[0])
                 # VIS2FLAG = data['OI_VIS2'].data['FLAG']
             
                 vis    = np.sqrt(np.abs(VIS2)) * np.sign(VIS2)
                 viserr = 0.5* VIS2ERR / (vis+(vis==0));
                 
-                #flag = ~ VIS2FLAG
-                flag = (WLEN < wlmax)      &\
-                       (WLEN > wlmin)      &\
-                       (vis > 0. - viserr) &\
-                       (vis < 1. + viserr) &\
-                       (vis > -0.1)         &\
-                       (vis < 1.1)          &\
-                       (viserr > 0)         &\
-                       (viserr < 0.1)    #   &\
-                      # (VIS2 / VIS2ERR > 3)
+                if REFLAGGING_DATA == True:
+                    
+                    flag = (WLEN < wlmax)      &\
+                           (WLEN > wlmin)      &\
+                            (vis > 0. - viserr) &\
+                            (vis < 1. + viserr) &\
+                            (vis > -0.1)         &\
+                            (vis < 1.1)          &\
+                            (viserr > 0)         &\
+                            (viserr < 0.1)    #   &\
+
+                else:
+                    
+                    flag = (WLEN < wlmax)      &\
+                           (WLEN > wlmin)
+
                         
                 flag = ~flag
-            
-                data['OI_VIS2'].data['FLAG'] = flag
+                fichier['OI_VIS2'].data['FLAG'] = flag    
                 
-                            
-                # CP     = data['OI_T3'].data['T3PHI']
-                CPERR  = data['OI_T3'].data['T3PHIERR']
-                # CPFLAG = data['OI_T3'].data['FLAG']
+                # print(data['OI_VIS2'].data['FLAG'])
+                
+                CPERR  = fichier['OI_T3'].data['T3PHIERR']
+                WLEN = np.array([fichier['OI_WAVELENGTH'].data['EFF_WAVE']]*np.shape(CPERR)[0])
             
                 flag3 = (WLEN < wlmax) &\
                        (WLEN > wlmin) &\
@@ -72,14 +71,10 @@ def FLAG_DATA():
                        (CPERR < 20.)
                 flag3 = ~ flag3
             
-                data['OI_T3'].data['FLAG'] = flag3
+                fichier['OI_T3'].data['FLAG'] = flag3
                 
-                data.flush()
-                data.close()
-
-            except: 
-                
-                print('No wavelengths available please check this file: %s'%filenames)
+                fichier.flush()
+                fichier.close()
 
     
     return

@@ -9,8 +9,7 @@ Created on Mon Feb 22 18:15:26 2021
 import numpy as np
 from matplotlib import colors
 import matplotlib.pyplot as plt
-import os
-from imaging_model import image_increase_resolution, radial_profile_image
+from rhapsody_init import DATA_band_name
 
 def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs):
 
@@ -40,21 +39,13 @@ def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs
     axs.tick_params(axis='y', labelsize=13)
     axs.set_xlim([-R_image,R_image])
     axs.set_ylim([-R_image,R_image])
-    
-    if PLOT == False:
-        plt.close(fig1)
 
     if SAVE_OUTPUT != None:
         
-        if wavel_UD<6:
-
-            fig1.savefig(SAVE_OUTPUT +'image_LM_' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
-            
-            
-        else : 
-            
-            fig1.savefig(SAVE_OUTPUT +'image_N_' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
-                
+        fig1.savefig(SAVE_OUTPUT +'image' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
+   
+    if PLOT == False:
+        plt.close(fig1) 
    
     return
 
@@ -107,20 +98,12 @@ def plot_intensity_model_profile(x_model, y_model, wavel_UD, **kwargs):
         axs2.set_yscale('log')
 
     
-    if PLOT == False:
-        plt.close(fig2)
-
     if SAVE_OUTPUT != None:
-        
-        if wavel_UD<6:
 
-            fig2.savefig(SAVE_OUTPUT +'radial_LM_' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
-            
-            
-        else : 
-            
-            fig2.savefig(SAVE_OUTPUT +'radial_N_' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
-                
+        fig2.savefig(SAVE_OUTPUT +'radial_' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
+   
+    if PLOT == False:
+        plt.close(fig2) 
    
     return
 

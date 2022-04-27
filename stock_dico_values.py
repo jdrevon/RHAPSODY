@@ -7,58 +7,58 @@ Created on Tue Jan 12 09:07:41 2021
 """
 
 import numpy.ma as ma
+from rhapsody_init import DATA_band_name
+import numpy as np
 
-def stock_V2_from_dico(OIFITS_TOT_LM, OIFITS_TOT_N):
+def stock_V2_from_dico(OIFITS_TOT):
     
-    V2_TOT = []
-    V2_ERR = []
-    q_TOT  = []
-    wavel_TOT = []
-    U_TOT  = []
-    V_TOT  = []
-     
-    for i in range(len(OIFITS_TOT_LM)):
-        
-        flag           = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['FLAG'])
-        q_tmp          = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['BASELINE'].astype('float')/OIFITS_TOT_LM[i]['VIS2']['WAVEL'].astype('float'))
-        wavel_tmp      = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['WAVEL'].astype('float'))
-        U              = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['U'].astype('float'))
-        V              = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['V'].astype('float'))
-        V2_tmp         = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['VIS2'].astype('float'))
-        V2_err_tmp     = ma.concatenate(OIFITS_TOT_LM[i]['VIS2']['VIS2_ERR'].astype('float'))
-
-        V2_TOT.append(ma.masked_array(V2_tmp,mask=flag))
-        V2_ERR.append(ma.masked_array(V2_err_tmp,mask=flag))
-        q_TOT.append(ma.masked_array(q_tmp,mask=flag))
-        wavel_TOT.append(ma.masked_array(wavel_tmp,mask=flag))    
-        U_TOT.append(ma.masked_array(U,mask=flag))        
-        V_TOT.append(ma.masked_array(V,mask=flag))     
-        
-    for k in range(len(OIFITS_TOT_N)):
-        
-        flag           = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['FLAG'])
-        q_tmp          = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['BASELINE'].astype('float')/OIFITS_TOT_N[k]['VIS2']['WAVEL'].astype('float'))
-        wavel_tmp      = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['WAVEL'].astype('float'))
-        U              = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['U'].astype('float'))
-        V              = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['V'].astype('float'))
-        V2_tmp         = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['VIS2'].astype('float'))
-        V2_err_tmp     = ma.concatenate(OIFITS_TOT_N[k]['VIS2']['VIS2_ERR'].astype('float'))
-
-
-        
-        
-        V2_TOT.append(ma.masked_array(V2_tmp,mask=flag))
-        V2_ERR.append(ma.masked_array(V2_err_tmp,mask=flag))
-        q_TOT.append(ma.masked_array(q_tmp,mask=flag))
-        wavel_TOT.append(ma.masked_array(wavel_tmp,mask=flag))           
-        
-        
-    V2_TOT = ma.concatenate(V2_TOT)
-    V2_ERR = ma.concatenate(V2_ERR)
-    q_TOT  = ma.concatenate(q_TOT)
-    wavel_TOT = ma.concatenate(wavel_TOT) 
+    V2_TOT = np.zeros(len(OIFITS_TOT),dtype=object)
+    wavel_TOT = np.zeros(len(OIFITS_TOT),dtype=object)
+    q_TOT = np.zeros(len(OIFITS_TOT),dtype=object)
+    V2_ERR = np.zeros(len(OIFITS_TOT),dtype=object)
     
-    return wavel_TOT.compressed(), q_TOT.compressed(), V2_TOT.compressed(), V2_ERR.compressed()
+
+    
+    for k in range(len(OIFITS_TOT)):
+
+        V2_TOT_tmp = []
+        V2_ERR_tmp = []
+        q_TOT_tmp  = []
+        wavel_TOT_tmp = []
+        U_TOT_tmp  = []
+        V_TOT_tmp  = []
+    
+    
+        for i in range(len(OIFITS_TOT[k])):
+        
+            flag           = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['FLAG'])
+            q_tmp          = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['BASELINE'].astype('float')/OIFITS_TOT[k][i]['VIS2']['WAVEL'].astype('float'))
+            wavel_tmp      = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['WAVEL'].astype('float'))
+            U              = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['U'].astype('float'))
+            V              = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['V'].astype('float'))
+            V2_tmp         = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['VIS2'].astype('float'))
+            V2_err_tmp     = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['VIS2_ERR'].astype('float'))
+    
+            V2_TOT_tmp.append(ma.masked_array(V2_tmp,mask=flag))
+            V2_ERR_tmp.append(ma.masked_array(V2_err_tmp,mask=flag))
+            q_TOT_tmp.append(ma.masked_array(q_tmp,mask=flag))
+            wavel_TOT_tmp.append(ma.masked_array(wavel_tmp,mask=flag))    
+            U_TOT_tmp.append(ma.masked_array(U,mask=flag))        
+            V_TOT_tmp.append(ma.masked_array(V,mask=flag))     
+        
+        V2_TOT_tmp = ma.concatenate(V2_TOT_tmp)
+        V2_ERR_tmp = ma.concatenate(V2_ERR_tmp)
+        q_TOT_tmp  = ma.concatenate(q_TOT_tmp)
+        wavel_TOT_tmp = ma.concatenate(wavel_TOT_tmp) 
+
+
+        V2_TOT[k] = V2_TOT_tmp.compressed()
+        q_TOT[k] = q_TOT_tmp.compressed()
+        V2_ERR[k] = V2_ERR_tmp.compressed()
+        wavel_TOT[k] = wavel_TOT_tmp.compressed()
+    
+    return wavel_TOT, q_TOT, V2_TOT, V2_ERR
+        
 
 
 def stock_TP_from_dico(OIFITS_TOT_LM, OIFITS_TOT_N):
