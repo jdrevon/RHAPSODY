@@ -12,6 +12,7 @@ Reconstructing Hankel rAdial Profiles in centro-Symmetric Objects with Discrete 
 TO DO ROADMAP and incoming new features:
 
 - User Documentation
+- Custom Intensity Profile provided by the user
 - Introduce inclination and position angle in RHAPSODY 
 - Take the final intensity profile as initial guess for the next wavelengths inside the parallelization
 - Optimize the fitting using MCMC 
