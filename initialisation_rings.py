@@ -10,8 +10,8 @@ Created on Mon Oct 11 15:19:23 2021
 import numpy as np
 from brightness_distribution_models import normalized_brightness_R
 from A2_gaussian import gaussian
-from rhapsody_init import sigma, init, alpha, DATA_band_name, size_ring, NBR_ring
-
+from rhapsody_init import sigma, init, alpha, DATA_band_name, size_ring, NBR_ring, diam_disk
+from uniform_disk import uniform_disk
 
 import sys 
 
@@ -38,17 +38,23 @@ def rings():
     
     # I create an array to set the inner boundaries of each rings
 
-    diam_UD_bef= [np.array([0]+diam_UD[i].tolist())[:-1] for i in range(len(diam_UD))]
+    diam_UD_bef= [diam_UD[i]-diam_UD[i][0] for i in range(len(diam_UD))]
     
     # 2 Initialization of the initial intensity profile with respect to the power law given by the user with alpha    
   
     if init == 'PW':  
   
-        I_ratio = [1/diam_UD[i]**alpha[i]/(1/diam_UD[i][0]**alpha[i]) for i in range(len(diam_UD))]
+        I_ratio = [1/(diam_UD_bef[i]/2)**alpha[i]/(1/(diam_UD_bef[i][0]/2)**alpha[i]) for i in range(len(diam_UD))]
 
     elif init == 'G':  
         
-        I_ratio = [gaussian(0, sigma[i], 1, diam_UD[i])/gaussian(0,sigma[i], 1, diam_UD[i][0]) for i in range(len(diam_UD))]
+        I_ratio = [gaussian(0, sigma[i], 1, diam_UD_bef[i]/2)/gaussian(0,sigma[i], 1, diam_UD_bef[i][0]/2) for i in range(len(diam_UD))]
+        
+    elif init == 'D':
+        
+        I_ratio = [uniform_disk(diam_UD_bef[i], diam_disk[i]) for i in range(len(diam_UD))]
+
+        
         
     else: 
         print("Please enter a valid value: Power (PW) or Gaussian (G) Law")

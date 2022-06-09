@@ -8,36 +8,62 @@ Created on Wed Feb  3 15:01:53 2021
 
 import numpy as np
 
-from rhapsody_init import REG_method, max_iterations, tolerance, nprocs, DATA_band_name
+from rhapsody_init import REG_method, max_iterations, tolerance, nprocs, DATA_band_name, angle_guess, inc_guess, inc_flag, FITTING
 from lmfit import minimize as minim
 from lmfit import Parameters,fit_report
-from model_visibilities import V_uniform, V_ring
 from check_intensity import check_intensity
 from plot_V2_obs_model import plot_V2_obs_model
 from f_prior import total_variation, quad_smoothness
 from plot_hist import plot_histogram
 from prettytable import PrettyTable
 import multiprocessing as mp
+from scipy.interpolate import interp1d
+from numpy import cos as cos
+from numpy import sin as sin
 
-def short_model(params,q_UD_fitting, V2_DATA, V2_DATA_ERR, HP, V_model, REG_method, intensity_init, flux_init):
+def coord_change(qu, qv, inclination_tmp, ang_tmp):
+    
+    ang         = ang_tmp*np.pi/180
+    inclination = inclination_tmp*np.pi/180
+    new_qu = qu*cos(np.pi/2-ang)+qv*sin(np.pi/2-ang)
+    new_qv = (-qu*sin(np.pi/2-ang)+qv*cos(np.pi/2-ang))*cos(inclination)
+
+    new_q = np.sqrt((new_qu)**2 + (new_qv)**2)
+
+    return new_qu, new_qv, new_q    
+
+
+def short_model(params, q_DATA_fitting, qu_DATA_fitting, qv_DATA_fitting, q_interp, qu_interp, qv_interp, V2_DATA, V2_DATA_ERR, HP, V_model, REG_method, intensity_init, flux_init):
     
     
     nb_ring = len(flux_init)
     res_diam_outer_ring         = [params['diam_outer_ring'+str(i)].value for i in range(nb_ring)]
     res_diam_inner_ring         = [params['diam_inner_ring'+str(i)].value for i in range(nb_ring)]
     res_F_tmp                   = [params['flux_ftot'+str(i)].value for i in range(nb_ring)]
+    inc                         = params['inclination'].value
+    ang                         = params['angle'].value
 
     res_F, I_tot_norm = check_intensity(res_F_tmp, res_diam_outer_ring, res_diam_inner_ring, intensity_init, flux_init)
 
-    CF = np.sum([V_model[i]*res_F[i] for i in range(nb_ring)],axis=0)
 
-     
+    CF = np.sum([V_model[i]*res_F[i] for i in range(nb_ring)],axis=0)     
     F_tot = np.sum([res_F[k] for k in range(nb_ring)],axis=0)
-    Vis2 = (CF/F_tot)**2
-   
-    # plt.figure()
-    # plt.scatter(q_UD_fitting,Vis2,s=2)
+
+    Vis_tmp = CF/F_tot
     
+    # new_qu, new_qv, new_q = coord_change(qu_DATA_fitting, qv_DATA_fitting, inc, ang)
+    # new_qu, new_qv, new_q = coord_change(qu_DATA_fitting, qv_DATA_fitting, inc, ang)
+    new_qu, new_qv, new_q = coord_change(qu_DATA_fitting, qv_DATA_fitting, inc, ang)
+
+    V_interp_function = interp1d(q_interp, Vis_tmp)
+    
+    Vis =  V_interp_function(new_q)
+
+    # Vis =  V_interp_function(q_interp)    
+
+    # Vis =  V_interp_function(q_DATA_fitting)
+    Vis2 = Vis**2
+        
     if REG_method == 'TV':
 
         f_prior = total_variation(HP, I_tot_norm, np.array(res_diam_outer_ring)/2)    
@@ -53,7 +79,7 @@ def short_model(params,q_UD_fitting, V2_DATA, V2_DATA_ERR, HP, V_model, REG_meth
 
 def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
                      params2, \
-                         q_UD_HR, q_DATA, \
+                         q_interp, qu_interp, qv_interp, q_DATA, qu_DATA, qv_DATA, \
                              intensity_profile, \
                                  flux_ratio, \
                                      V2_DATA, V2_DATA_ERR, V_model, \
@@ -61,18 +87,24 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
     
     nb_ring = len(flux_ratio)    
     cond= wavel_DATA == wavel_ALL[i]
-    q_UD_fitting      = np.array(q_DATA[cond])  
+    q_DATA_fitting       = np.array(q_DATA[cond])  
+    qu_DATA_fitting      = np.array(qu_DATA[cond])  
+    qv_DATA_fitting      = np.array(qv_DATA[cond])  
+    
     V2_DATA     = np.array(V2_DATA[cond])
     V2_DATA_ERR = np.array(V2_DATA_ERR[cond])                         
 
 
-    res2 = minim(short_model, params2, args=(q_UD_fitting, V2_DATA, V2_DATA_ERR, HP, V_model[i], REG_method, intensity_profile, flux_ratio), method='COBYLA',max_nfev=max_iterations, tol = tolerance) # 5E-4 OK
+    res2 = minim(short_model, params2, args=(q_DATA_fitting, qu_DATA_fitting, qv_DATA_fitting, q_interp, qu_interp, qv_interp, V2_DATA, V2_DATA_ERR, HP, V_model, REG_method, intensity_profile, flux_ratio), method='COBYLA',max_nfev=max_iterations, tol = tolerance) # 5E-4 OK
 
     print('WORK ON %.3f OVER'%(wavel_ALL[i]*1E6))
     
     res_diam_outer_ring = [res2.params['diam_outer_ring'+str(k)].value for k in range(nb_ring)]
     res_diam_inner_ring = [res2.params['diam_inner_ring'+str(k)].value for k in range(nb_ring)]
     res_F_tmp = [res2.params['flux_ftot'+str(k)].value for k in range(nb_ring)]
+    
+    inc = res2.params['inclination'].value
+    ang  = res2.params['angle'].value
     
     # This function has been already included in the computation of the chi2 but have to be also execute in the output to take into consideration the different changes made on the flux values.
     # Here we say that wa cannot have an intensity higher than the central uniform disk. Which is in the continuity of our initial condition.
@@ -86,34 +118,52 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
 
     # Then based on this new flux ratio for each rings, we compute the coherent flux in order to compute the visibilities
 
-    CF_fitting = np.sum([V_model[i][k]*res_F[k]\
+    CF_fitting = np.sum([V_model[k]*res_F[k]\
                 for k in range(nb_ring)], axis=0)
 
             
     F_tot = np.sum([res_F[k] for k in range(nb_ring)],axis=0)
-    V2_fitting = (CF_fitting/F_tot)**2
+    Vis_tmp = (CF_fitting/F_tot)
 
-    # Here based on the final fitting parameters for this model at this wl, for display purpose, we want to increase the resolution of the model plots
-    # Then we compute a last time the visibility curves.
 
-    CF = np.sum([V_ring(q_UD_HR,res_diam_inner_ring[k],res_diam_outer_ring[k])*res_F[k]\
-                for k in range(nb_ring)],axis=0)
+    new_qu, new_qv, new_q = coord_change(qu_DATA_fitting, qv_DATA_fitting, inc, ang)
 
-    V2_model_HR = (CF/F_tot)**2
+    V_interp_function = interp1d(q_interp, Vis_tmp)
+    
+    Vis =  V_interp_function(new_q)
+
+    # new_qu, new_qv, new_q = coord_change(qu_DATA_fitting, qv_DATA_fitting, inc, ang)
+
+    # # V_interp_function = interp1d(q_interp, Vis_tmp)
+    # # Vis =  V_interp_function(new_q)
+
+    # new_qu, new_qv, new_q = coord_change(qu_interp, qv_interp, inc, ang)
+
+    # V_interp_function = interp1d(new_q, Vis_tmp)
+    # Vis =  V_interp_function(q_DATA_fitting)
+
+    V2_fitting = Vis**2
 
 
     # PLOT of the V2 with higher resolution for the model displayed in linear scale            
 
-    plot_V2_obs_model(q_UD_fitting,V2_DATA, q_UD_HR, V2_model_HR, wavel_ALL[i]*1E6, PLOT = False,\
-                      SAVE_OUTPUT = PATH_OUTPUT_VIS, logy = True, y_obs_err = V2_DATA_ERR,\
-                          xlim_min = 1E6, xlim_max = 5E7, ylim_min = 1E-7, ylim_max = 1E0)           
+    # plot_V2_obs_model(q_DATA_fitting,V2_DATA, q_DATA_fitting, V2_fitting, wavel_ALL[i]*1E6, PLOT = False,\
+    #                   SAVE_OUTPUT = PATH_OUTPUT_VIS, logy = True, y_obs_err = V2_DATA_ERR,\
+    #                       xlim_min = 1E6, xlim_max = 5E7, ylim_min = 1E-7, ylim_max = 1E0)           
+
+    plot_V2_obs_model(q_DATA_fitting,V2_DATA, q_DATA_fitting, V2_fitting, wavel_ALL[i]*1E6, PLOT = False,\
+                      SAVE_OUTPUT = PATH_OUTPUT_VIS, logy = True, y_obs_err = V2_DATA_ERR, ylim_max = 1.05)           
+
 
     # PLOT of the V2 with higher resolution for the model displayed in logarithmic scale            
 
-    plot_V2_obs_model(q_UD_fitting,V2_DATA, q_UD_HR, V2_model_HR, wavel_ALL[i]*1E6, PLOT = False,\
-                      SAVE_OUTPUT = PATH_OUTPUT_VIS, y_obs_err = V2_DATA_ERR,\
-                          xlim_min = 0, xlim_max = 5E7, ylim_min = -0.1, ylim_max = 1.05)           
+    # plot_V2_obs_model(q_DATA_fitting,V2_DATA, q_DATA_fitting, V2_fitting, wavel_ALL[i]*1E6, PLOT = False,\
+    #                   SAVE_OUTPUT = PATH_OUTPUT_VIS, y_obs_err = V2_DATA_ERR,\
+    #                       xlim_min = 0, xlim_max = 5E7, ylim_min = -0.1, ylim_max = 1.05)           
 
+
+    plot_V2_obs_model(q_DATA_fitting,V2_DATA, q_DATA_fitting, V2_fitting, wavel_ALL[i]*1E6, PLOT = False,\
+                      SAVE_OUTPUT = PATH_OUTPUT_VIS, y_obs_err = V2_DATA_ERR, ylim_max = 1.05) 
    
     # Here we set an histogram of the residuals weighted by the error in order to check if we have a Gaussian like distribution to quantify the goodness of fit in addition to the chi2 value
     # However knowing that we use a Bayesian approach the more we increase the prior impact on the fit, the more we will observe an expected deviation from the Gaussian like distribution
@@ -163,18 +213,18 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
     # print('WORK ON %.3f OVER'%wavel_ALL[i])
 
     
-    return  wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot
+    return  wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot, inc, ang
 
 
 
-def UD_modeling(wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR,\
-                         q_UD_HR, diam_outter_ring, diam_inner_ring, flux_ratio, I_norm, flux_max,\
+def UD_modeling(wavel_DATA, q_DATA, qu_DATA, qv_DATA, V2_DATA, V2_DATA_ERR,\
+                         q_interp, qu_interp, qv_interp, diam_outter_ring, diam_inner_ring, flux_ratio, I_norm, flux_max,\
                                      HP, V_model,\
                                          PATH_OUTPUT, PATH_OUTPUT_VIS, PATH_OUTPUT_INT, PATH_OUTPUT_HIST, PATH_OUTPUT_FIT_RES, PLOT):
          
 
         
-
+    
     # INITIALIZATION OF THE MINIMIZATION ROUTINE PARAMETER'S 
 
     name_var_ring = [['diam_outer_ring'+str(i) for i in range(len(diam_outter_ring[k]))] for k in range(len(DATA_band_name))]
@@ -187,10 +237,29 @@ def UD_modeling(wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR,\
     params_TOT = []
     for k in range(len(DATA_band_name)):
         
+        if inc_flag == False:
+            angle_flag = False 
+        else:
+            angle_flag = True
+        
+        
+        
         params2 = Parameters()        
         [params2.add(name_var_ring[k][j],value = diam_outter_ring[k][j], vary= False) for j in range(len(diam_outter_ring[k]))]
         [params2.add(name_var_ring_bef[k][j],value = diam_inner_ring[k][j], vary= False) for j in range(len(diam_inner_ring[k]))]
-        [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= variation_flux[k][j]) for j in range(len(diam_outter_ring[k]))]
+
+        if FITTING  == False:
+            [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= False) for j in range(len(diam_outter_ring[k]))]
+            params2.add('inclination',value = inc_guess[k], min=0, max=87, vary= False)
+            params2.add('angle',value = angle_guess[k], min=0, max=180, vary= False)
+
+        else:
+            [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= variation_flux[k][j]) for j in range(len(diam_outter_ring[k]))]
+            params2.add('inclination',value = inc_guess[k], min=0, max=87, vary= inc_flag)
+            params2.add('angle',value = angle_guess[k], min=0, max=180, vary= angle_flag)
+
+        # params2.add('flatness',value = flatness_guess[k], min=1, max=flatness_max[k], vary= False)
+        # params2.add('angle',value = angle_guess[k], min=0, max=180, vary= False)
 
         # Indeed the more we get further from the star, the more the rings have low probability to have higher intensity than the central uniform disk using this maximum boundary
         # This will also hardly depend on the initial intensity profile that we use. At the moment only 1/r^alpha are available thus this is impossible 
@@ -209,7 +278,7 @@ def UD_modeling(wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR,\
     
         pool = mp.Pool(processes=nprocs)    
         result_parallel = pool.starmap(fitting_function, [(i, list_wavel, wavel_DATA[k], HP, diam_outter_ring[k], \
-                             params_TOT[k], q_UD_HR[k], q_DATA[k], \
+                             params_TOT[k], q_interp[k], qu_interp[k], qv_interp[k], q_DATA[k], qu_DATA[k], qv_DATA[k], \
                                      I_norm[k], flux_ratio[k], \
                                              V2_DATA[k], V2_DATA_ERR[k], V_model[k], \
                                                  PATH_OUTPUT_VIS[k], PATH_OUTPUT_HIST[k]) for i in range(len(list_wavel))])
@@ -219,7 +288,7 @@ def UD_modeling(wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR,\
     
     
     
-        list_wavel, resultat, chi2, chi2_red, f_prior, chi2_tot, res_F, I_tot = np.array(result_parallel).T
+        list_wavel, resultat, chi2, chi2_red, f_prior, chi2_tot, res_F, I_tot, inc, angle = np.array(result_parallel).T
 
         print('END FITTING on %s band'%DATA_band_name[k])
         
@@ -275,6 +344,29 @@ def UD_modeling(wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR,\
         for j in range(len(chi2)):
             data_chi2.add_row([list_wavel[j]]+ [chi2[j]] + [chi2_red[j]] + [f_prior[j]] + [chi2_tot[j]])
         with open(PATH_OUTPUT_FIT_RES[k]+'chi2_%s_band.dat'%DATA_band_name[k], 'w') as f: f.write(str(data_chi2))
+
+        # ALL FLATNESS VALUES
+    
+        print('GENERATING INLCINATION TABLE for the %s band'%DATA_band_name[k])
+    
+            
+        data_flat = PrettyTable()
+        data_flat.field_names = ['Wavel', 'inclination [deg]']
+        for j in range(len(inc)):
+            data_flat.add_row([list_wavel[j]]+ [inc[j]])
+        with open(PATH_OUTPUT_FIT_RES[k]+'inclination_%s_band.dat'%DATA_band_name[k], 'w') as f: f.write(str(data_flat))
+
+        # ALL ANGLE VALUES
+    
+        print('GENERATING ANGLE TABLE for the %s band'%DATA_band_name[k])
+    
+            
+        data_angle = PrettyTable()
+        data_angle.field_names = ['Wavel', 'angle']
+        for j in range(len(angle)):
+            data_angle.add_row([list_wavel[j]]+ [angle[j]])
+        with open(PATH_OUTPUT_FIT_RES[k]+'angle_%s_band.dat'%DATA_band_name[k], 'w') as f: f.write(str(data_angle))
+
     
     return
 

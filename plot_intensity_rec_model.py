@@ -32,7 +32,7 @@ def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs
 
     axs.set_xlabel(r'$\alpha$ [mas]',fontsize = 16)
     axs.set_ylabel(r'$\delta$ [mas]',fontsize = 16)
-    axs.set_title(r'Image from the model at $\lambda$ = %.2f µm'%wavel_UD,fontsize = 16)
+    axs.set_title(r'Image from the model at $\lambda$ = %.3f µm'%wavel_UD,fontsize = 16)
 
     axs.minorticks_on()
     axs.tick_params(axis='x', labelsize=13)

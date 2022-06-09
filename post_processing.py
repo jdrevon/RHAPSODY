@@ -6,7 +6,7 @@ Created on Thu Mar 25 20:09:48 2021
 @author: jdrevon
 """
 
-from increase_intensity import increase_intensity_profile_res
+from increase_intensity import increase_intensity_profile_res,increase_intensity_profile_res_1W
 from data_cube import image_to_data_cube
 from imaging_model import imaging_model
 from plot_intensity_rec_model import plot_intensity_model_image, plot_intensity_model_profile
@@ -18,8 +18,11 @@ def post_processing(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_INT, PATH_INTENSITY_PROFILE
     if image_resolution == 'default':
         rho, I_tot_norm_HR, wavel = increase_intensity_profile_res(PATH_INTENSITY_PROFILE)
     else :
-        rho, I_tot_norm_HR, wavel = increase_intensity_profile_res(PATH_INTENSITY_PROFILE, nb_points=int(image_resolution/2))
-
+        try:
+            rho, I_tot_norm_HR, wavel = increase_intensity_profile_res(PATH_INTENSITY_PROFILE, nb_points=int(image_resolution/2))
+        except:
+            rho, I_tot_norm_HR, wavel = increase_intensity_profile_res_1W(PATH_INTENSITY_PROFILE, nb_points=int(image_resolution/2))
+                
     stock_images = []    
 
     for i in range(len(wavel_model)):        

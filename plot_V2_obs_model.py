@@ -36,15 +36,14 @@ def plot_V2_obs_model(x_obs,y_obs, x_model, y_model, wavel_obs, **kwargs):
     ylim_min    = kwargs.get('ylim_min', min(np.concatenate([y_obs,y_model])))
     ylim_max    = kwargs.get('ylim_max', max(np.concatenate([y_obs,y_model])))
     
-    
     # print(PLOT,SAVE_OUTPUT,logx,logy,xlim_min,xlim_max,ylim_min, ylim_max)
     
     
     fig1 = plt.figure()
     axs1 = plt.gca()
     
-    axs1.plot(x_model,y_model, label='Model')
-    axs1.errorbar(x_obs,y_obs, xerr = x_obs_err, yerr= y_obs_err, fmt='o', ms=2, ecolor='lightgray', c='orange', label="Observations")#, norm=colors.PowerNorm(gamma=1.5))
+    axs1.scatter(x_model,y_model, label='Model',s=2, alpha = 0.7)
+    axs1.errorbar(x_obs,y_obs, xerr = x_obs_err, yerr= y_obs_err, fmt='o', ms=2, ecolor='lightgray', c='orange', label="Observations", alpha=0.5)#, norm=colors.PowerNorm(gamma=1.5))
     axs1.set_xlabel(r' $B/\lambda$ [rad$^{-1}$]',fontsize = 16)
     axs1.set_ylabel(r'V2',fontsize = 16)
 
@@ -53,6 +52,8 @@ def plot_V2_obs_model(x_obs,y_obs, x_model, y_model, wavel_obs, **kwargs):
 
     if logy==True:
         axs1.set_yscale('log')
+        if ylim_min < 0:
+            ylim_min = min(np.concatenate([y_obs[y_obs>0],y_model[y_model>0]]))
 
     axs1.set_xlim([xlim_min,xlim_max])
     axs1.set_ylim([ylim_min,ylim_max])

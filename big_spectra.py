@@ -104,15 +104,15 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA):
     
     plot1=ax1.pcolor(W,D,intensity,norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
     # plt.plot(W[0],W[0]/(W[0][0])*22, c='white', linestyle='--')
-    plt.plot(W[0],W[0]/(W[0][0])*32, c='white',linestyle='--')
-    plt.plot(W[0],W[0]/(W[0][0])*42, c='white',linestyle='--')
-    plt.plot(W,W*1E-6/140/(W[0]*1E-6/140)*32, c='white',linestyle='--')
-    plt.plot(W,W*1E-6/140/(W[0]*1E-6/140)*42, c='white',)
+#    plt.plot(W[0],W[0]/(W[0][0])*32, c='white',linestyle='--')
+#    plt.plot(W[0],W[0]/(W[0][0])*42, c='white',linestyle='--')
+#    plt.plot(W,W*1E-6/140/(W[0]*1E-6/140)*32, c='white',linestyle='--')
+#    plt.plot(W,W*1E-6/140/(W[0]*1E-6/140)*42, c='white',)
 
-    ax1.axhline(y=12, color='chartreuse', linestyle='-')
-    ax1.axhline(y=18, color='chartreuse', linestyle='-')
+#    ax1.axhline(y=12, color='chartreuse', linestyle='-')
+#    ax1.axhline(y=18, color='chartreuse', linestyle='-')
 
-    ax1.axhline(y=24, color='deepskyblue', linestyle='-')
+#    ax1.axhline(y=24, color='deepskyblue', linestyle='-')
         
     
     ax1.set_yscale('log')

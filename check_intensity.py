@@ -25,3 +25,5 @@ def check_intensity(res_F_mod, res_UD, res_UD_bef, intensity_init, flux_init):
                 I_tot_norm[index] =  intensity_init[index]
             
         return F_new, I_tot_norm
+    
+    

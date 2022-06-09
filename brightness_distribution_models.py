@@ -18,6 +18,7 @@ def normalized_brightness_UD(rho, diam):
     return I_UD
 
 def normalized_brightness_R(rho, inner_diam, outter_diam):
+
     if np.logical_or(isinstance(rho,float),isinstance(rho,int)):
         rho = np.array([rho])
     I_UD = np.zeros(len(rho)) 

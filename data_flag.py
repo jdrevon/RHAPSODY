@@ -58,20 +58,23 @@ def FLAG_DATA():
 
                         
                 flag = ~flag
-                fichier['OI_VIS2'].data['FLAG'] = flag    
-                
+                try:
+                    fichier['OI_VIS2'].data['FLAG'] = flag    
+                except:
+                    fichier['OI_VIS2'].data['FLAG'] = flag.reshape((len(flag),))
+                    
                 # print(data['OI_VIS2'].data['FLAG'])
                 
-                CPERR  = fichier['OI_T3'].data['T3PHIERR']
-                WLEN = np.array([fichier['OI_WAVELENGTH'].data['EFF_WAVE']]*np.shape(CPERR)[0])
+                # CPERR  = fichier['OI_T3'].data['T3PHIERR']
+                # WLEN = np.array([fichier['OI_WAVELENGTH'].data['EFF_WAVE']]*np.shape(CPERR)[0])
             
-                flag3 = (WLEN < wlmax) &\
-                       (WLEN > wlmin) &\
-                       (CPERR > 0.)     &\
-                       (CPERR < 20.)
-                flag3 = ~ flag3
+                # flag3 = (WLEN < wlmax) &\
+                #        (WLEN > wlmin) &\
+                #        (CPERR > 0.)     &\
+                #        (CPERR < 20.)
+                # flag3 = ~ flag3
             
-                fichier['OI_T3'].data['FLAG'] = flag3
+                # fichier['OI_T3'].data['FLAG'] = flag3
                 
                 fichier.flush()
                 fichier.close()
