@@ -237,26 +237,23 @@ def UD_modeling(wavel_DATA, q_DATA, qu_DATA, qv_DATA, V2_DATA, V2_DATA_ERR,\
     params_TOT = []
     for k in range(len(DATA_band_name)):
         
-        if inc_flag == False:
-            angle_flag = False 
-        else:
-            angle_flag = True
-        
-        
-        
         params2 = Parameters()        
         [params2.add(name_var_ring[k][j],value = diam_outter_ring[k][j], vary= False) for j in range(len(diam_outter_ring[k]))]
         [params2.add(name_var_ring_bef[k][j],value = diam_inner_ring[k][j], vary= False) for j in range(len(diam_inner_ring[k]))]
 
         if FITTING  == False:
-            [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= False) for j in range(len(diam_outter_ring[k]))]
+            [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= False) for j in range(len(diam_outter_ring[k]))] 
             params2.add('inclination',value = inc_guess[k], min=0, max=87, vary= False)
             params2.add('angle',value = angle_guess[k], min=0, max=180, vary= False)
-
+                
         else:
             [params2.add(name_var_F[k][j],value = flux_ratio[k][j], min=0, max=flux_max[k][j], vary= variation_flux[k][j]) for j in range(len(diam_outter_ring[k]))]
-            params2.add('inclination',value = inc_guess[k], min=0, max=87, vary= inc_flag)
-            params2.add('angle',value = angle_guess[k], min=0, max=180, vary= angle_flag)
+            if inc_flag == False:
+                params2.add('inclination',value = 0, min=0, max=87, vary= False)
+                params2.add('angle',value = 0, min=0, max=180, vary= False)
+            else:
+                params2.add('inclination',value = inc_guess[k], min=0, max=87, vary= True)
+                params2.add('angle',value = angle_guess[k], min=0, max=180, vary= True)
 
         # params2.add('flatness',value = flatness_guess[k], min=1, max=flatness_max[k], vary= False)
         # params2.add('angle',value = angle_guess[k], min=0, max=180, vary= False)

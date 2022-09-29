@@ -21,3 +21,18 @@ def BB_v_Jy(wavel, T_eff, R_sun_usr, distance):
     black_body = BB_v(wavel,T_eff)*4*np.pi*(R_sun_usr*R_sun.value)**2*np.pi/(1E-26)/(4*np.pi*(distance*3.08E16)**2)
     
     return wavel, black_body
+
+
+
+# wavel = np.linspace(0.1,20, 1000)
+# T_eff = 1E4
+
+
+# # BB = BB_v_Jy(wavel, T_eff, R_sun_usr, distance)
+# import matplotlib.pyplot as plt
+
+# BB = BB_v(wavel*1E-6, T_eff)
+# plt.figure()
+# plt.plot(wavel, BB)
+# plt.yscale('log')
+# plt.xscale('log')

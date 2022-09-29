@@ -21,4 +21,4 @@ def gaussian_exp(x,central_value,sigma,A):
     return np.exp(-gaussian_value)
 
 
-# /(sigma*np.sqrt(2*np.pi))
+# /(sigma*np.sqrt(2*np.pi)

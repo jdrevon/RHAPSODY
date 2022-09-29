@@ -16,12 +16,13 @@ Created on Tue Oct 12 10:58:06 2021
 
 # DATA_DIR = ["C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/beauty_contest"] #Path for all the different bands
 
-DATA_DIR = ["C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/MODEL_proceding/Inclined"] #Path for all the different bands
+DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/DATA_STRONG_sorting/MED/2018_12"]
+             #Path for all the different bands
 
 
 # FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
 
-PROCESS_DIR = "C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/MODEL_proceding/Inclined"
+PROCESS_DIR = "C:/Users/jdrevon/Desktop/test_betelgeuse_rhapsody"
 
 # PROCESS_DIR = "C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/beauty_contest"
 
@@ -44,8 +45,8 @@ nprocs = 8 # Nbr of cores
 # DATA_band_max  = [4.00,12.50] #µm
 
 DATA_band_name = ['LM'] 
-DATA_band_min  = [1]  #µm 
-DATA_band_max  = [5] #µm
+DATA_band_min  = [2.81]  #µm 
+DATA_band_max  = [2.82] #µm
 
 # DATA_band_name = ['LM', 'N'] 
 # DATA_band_min  = [2.8, 8.50]  #µm 
@@ -68,7 +69,7 @@ DATA_band_max  = [5] #µm
 #        (viserr > 0)         &\
 #        (viserr < 0.1)    #   &\
 
-REFLAGGING_DATA = False
+REFLAGGING_DATA = True
 
 
 # Does the error bar on visibilities seems underestimated? 
@@ -77,7 +78,8 @@ REFLAGGING_DATA = False
     
 # ERROR_SUP = [0.03,0.03]
 
-ERROR_SUP = [0.02]
+# ERROR_SUP = [0.02,0.02,0.02,0.02]
+ERROR_SUP = [0]
 
 # FLUX
 # Is the OIFITS_FLUX table is provided in the data? If Yes, please set True, if not set False
@@ -91,10 +93,10 @@ OIFITS_FLUX = False
 # NBR_ring  = [56,60] # NBR_ring [#] : number of rings to put in the model for the different bands
 
 
-size_ring = [2]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+size_ring = [1]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
 NBR_ring  = [100]     # NBR_ring [#] : number of rings to put in the model for the different bands
 
-init = 'G' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
+init = 'D' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
 
 # For PW profile:
 
@@ -110,7 +112,7 @@ sigma = [10]    # sigma [mas] : Standard deviation of the intensity profile for 
 
 # For Uniform Disk 
 
-diam_disk = [10] # [mas] : Diameter of the Uniform Disk
+diam_disk = [20] # [mas] : Diameter of the Uniform Disk
 
 ########### Method of Regularization: 
 
@@ -123,10 +125,28 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [0, 1E0, 1E1, 1E2, 1E3, 1E4, 1E5] # µ
+HP = [1E3] # µ
 
 ########### Fitting Parameters:
     
+#To Fit or not to fit... that is the question
+
+#This routine aims to gives you the choice to run the fitting process with fitting or not. If not, the routine will only run the code with the initial parameters.
+
+FITTING = False
+
+##### OPTIONNAL FEATURE ##################################################################################
+                                                                                                         #
+# IN CASE OF FITTING = False you have the following optionnal option:                                    #
+                                                                                                         #
+# If READING ONLY = True, the routine will only read the previous data fitted and located in the folders #
+# If READING ONLY = False, the routine will only take the initial parameters to build the model          #
+                                                                                                         #
+READING_ONLY = False                                                                                      #
+                                                                                                         #
+##########################################################################################################
+
+
 # WARNING: Only the COBYLA method has been fully tested for this code.
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
@@ -153,8 +173,9 @@ max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergen
 
 
 inc_flag       = True # If you want to activate the inclination option set "True" otherwise set "False" and put 0 as initial guess.
-inc_guess      = [50] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination .
-angle_guess    = [50] # orientation angle of the structure # 0° = no orientation
+
+inc_guess      = [50] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination. 0 will be set by defaut if inc_flag = False
+angle_guess    = [40] # orientation angle of the structure # 0° = no orientation. 0 will be set by defaut if inc_flag = False
 
 ########### Set the resolution of the modeled curve for the plot:
 
@@ -169,7 +190,32 @@ model_rho_min = [None] # [rad^-1] If None the intensity profile starts at 0 (the
 model_rho_max = [None] # [rad^-1] If None the intensity profile ends at the model edges
 model_rho     = [1000] # Number of points in the model for each bands
 
-image_rec_windows = [60] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
+
+########### Set the windows in mas of the images:
+
+image_rec_windows = [100] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
+                                        # ex= [800] ==> -400 mas ---////---- + 400 mas
+
+########### Set the properties of the intensity profile spectra:
+
+#SET MANUALLY THE RADIAL BORDERS FOR THE SPECTRA OF THE INTENSITY RADIAL PROFILES:   
+# To activate such feature plase turn the following variable to True
+
+manual_borders = True    
+
+# And now set your borders 
+# ex: borders_spectra = [ [min of BAND 1 ,max of BAND 1], [min of BAND 2 ,max of BAND 2]] 
+
+borders_spectra = [[0.5, 100]]
+
+#6 : If you want to add some ticks in the specta of the radial profile put them here:
+    
+# example: additionnal_ticks = [ [TICKS FOR THE FIRST BAND], [TICKS FOR THE FIRST BAND] ]
+# Let the array empty if you don't want the additionnal ticks
+
+additionnal_ticks= [ [10,20,50]]
+
+
 
 ########### OPTIONNAL FEATURES PARAMETERS:
     
@@ -185,24 +231,16 @@ image_rec_windows = [60] # The maximum radial distance that the user want to dis
 
 NBR_GRPS_PA = 4
 
-#2 : To Fit or not to fit... that is the question
 
-# This second routine aims to gives you the choice to run the fitting process or not. If not, the routine will only read the previous data fitted and located in the folders
-
-READING_ONLY = False #READING ONLY
-
-#3 #This routine aims to gives you the choice to run the fitting process with fitting or not. If not, the routine will only run the code with the initial parameters.
-
-FITTING = True
-
-#4 :  Instrument spectra normalization with a black body. 
+#2 :  Instrument spectra normalization with a black body. 
 # This routine will normalize the instrument spectra by a blackbody spectrum.
 # In order to do it the routine needs the black body temperature, the estimated stellar radius in astronomical units and the distance in parsec of the object.
 
-BB_norm = True 
+BB_norm = False 
 
-BB_temperature = 2700 # Kelvins
+BB_temperature = 3500 # Kelvins
 distance_target = 632 #pc
 stellar_radii = 3 # AU
 
 
+    

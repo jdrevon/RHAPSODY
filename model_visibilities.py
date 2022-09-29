@@ -14,6 +14,7 @@ def V_uniform(qu, qv, diam):
     q = np.sqrt(qu**2+qv**2)
     V = np.zeros(len(q))
     V[q>0] = 2*j1(np.pi*q[q>0]*mas_to_rad(diam))/(np.pi*q[q>0]*mas_to_rad(diam))
+    V[q==0] = 1
     
     return V
 
@@ -25,7 +26,6 @@ def V_ring(qu , qv, inner_diam, outter_diam):
         V = V_uniform(qu, qv, outter_diam)
     else:            
         V = np.zeros(len(q))
-
         f = (outter_diam-inner_diam)/(inner_diam)
         V[q>0]  = 2/(np.pi*q[q>0]*mas_to_rad(inner_diam)*(2*f+f**2))*((1+f)*j1((1+f)*mas_to_rad(inner_diam)*np.pi*q[q>0])-j1(mas_to_rad(inner_diam)*np.pi*q[q>0]))
         V[q==0] = 1

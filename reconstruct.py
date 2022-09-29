@@ -6,7 +6,7 @@ Created on Tue Aug 11 14:14:23 2020
 @author: Julien
 """
 
-from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY
+from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks
 from initialisation_rings import rings
 from fits_reading_dico import OIFITS_READING, OIFITS_SORTING
 from stock_dico_values import stock_V2_from_dico
@@ -26,6 +26,21 @@ from image_reconstruction import image_reconstruction
 
 if __name__ == '__main__':
     
+    
+    if READING_ONLY == False:
+        
+        user = input("WARNING! Previously computed data with the same band name located in the following directory will be erased:\n%s.\nDo You Still Want To Continue? [y/n] \n"%PROCESS_DIR)
+        
+        if user == "n":
+            print('Wise decision... RHAPSODY has shut down')
+            sys.exit()
+        elif user == "y":
+            print("OK let's goooooo!")
+        
+        else:
+            print("Mamaaaaaa Ooooooooo !!!!! Let's go listen Bohemian Rhapsody and come back later (next time, please chose y or n as an answer please)")
+            sys.exit()
+        
     # COPY THE DATA IN THE RIGHT FOLDER 
 
     COPY_DATA(DATA_DIR, PROCESS_DIR)
@@ -62,7 +77,6 @@ if __name__ == '__main__':
     qu_interp = []
     qv_interp = []
     q_interp  = []
-
 
 
     for i in range(len(DATA_band_name)):
@@ -118,7 +132,8 @@ if __name__ == '__main__':
             if inc_flag==True:
                 PATH_OUTPUT_IMAGE_REC = [PATH_OUTPUT + '/' + DATA_band_name[k] + '/IMAGE_REC/' for k in range(len(DATA_band_name))]
     
-        if READING_ONLY == False:
+        if READING_ONLY == False:            
+            
             FOLDER_CREATION(PATH_RESULTS)
             FOLDER_CREATION(PATH_OUTPUT)
             REMOVE_ALL_FILES_FROM_FOLDER(PATH_OUTPUT)
@@ -156,14 +171,14 @@ if __name__ == '__main__':
             PATH_INTENSITY_PROFILE = PATH_OUTPUT_FIT_RES[k]+'intensity_%s_band.dat'%DATA_band_name[k]
 
             
-            distance, intensity, wavel = post_processing(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_INT[k], PATH_INTENSITY_PROFILE, list_wavel, image_rec_windows[k], image_resolution=2**8)    
+            distance, intensity, wavel = post_processing(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_INT[k], PATH_INTENSITY_PROFILE, list_wavel, image_rec_windows[k])    
     
             # SPECTRA
         
             # Apply the spectra only if we have more than 1 WVL to model
             
             if np.shape(list_wavel)[0] != 1:
-                W,D=np.meshgrid(np.append(wavel,wavel[-1]+np.diff(wavel)[-1]),np.append([0],distance))
+                W,D=np.meshgrid(np.append(wavel,wavel[-1]+np.diff(wavel)[-1]),np.append(distance,max(distance)+np.diff(distance)[0]))
 
                 # WITH FLUX :
     
@@ -174,13 +189,20 @@ if __name__ == '__main__':
                     OIFITS_TOT = FLUX_FLAG(OIFITS_TOT)
                     # Here I compute the spectra for each AT's and the total spectra
                     FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_data(OIFITS_TOT[k], PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_SPECTRA[k])
+
                     # Here I plot the BIG SPECTRA
-                    big_spectra_with_flux(W,D,intensity.T, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPECTRA[k])
+                    if manual_borders == True:
+                        big_spectra_with_flux(W,D,intensity.T, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPECTRA[k], additionnal_ticks[k], borders = borders_spectra[k])
+                    else:
+                        big_spectra_with_flux(W,D,intensity.T, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPECTRA[k], additionnal_ticks[k])
 
                 # WITHOUT FLUX:
         
                 else:
-                    big_spectra_without_flux(W,D,intensity.T, PATH_OUTPUT_SPECTRA[k])
+                    if manual_borders == True:
+                        big_spectra_without_flux(W,D,intensity.T, PATH_OUTPUT_SPECTRA[k], additionnal_ticks[k],  borders = borders_spectra[k])
+                    else: 
+                        big_spectra_without_flux(W,D,intensity.T, PATH_OUTPUT_SPECTRA[k], additionnal_ticks[k])
 
             #IMAGE RECONSTRUCTION:
             if inc_flag == True:
