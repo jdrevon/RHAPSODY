@@ -25,7 +25,7 @@ def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs
        
     fig1, axs = plt.subplots()
 
-    im=axs.imshow(abs(image_model),extent=[min(x_model),max(x_model),min(x_model),max(x_model)], cmap = 'hot',norm=colors.PowerNorm(gamma=0.5))#, norm=colors.PowerNorm(gamma=1.5))
+    im=axs.imshow(abs(image_model),extent=[min(x_model),max(x_model),min(x_model),max(x_model)], cmap = 'hot')#,norm=colors.PowerNorm(gamma=0.5))#, norm=colors.PowerNorm(gamma=1.5))
     cb = fig1.colorbar(im) 
     cb.set_label(label='Intensity Ratio [I_tot/I_max]', size=16, labelpad=10)
     cb.ax.tick_params(labelsize= 16)
@@ -42,7 +42,7 @@ def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs
 
     if SAVE_OUTPUT != None:
         
-        fig1.savefig(SAVE_OUTPUT +'image' + str(np.round(wavel_UD,3)) + '.jpg', bbox_inches = 'tight')
+        fig1.savefig(SAVE_OUTPUT +'image' + str(np.round(wavel_UD,4)) + '.jpg', bbox_inches = 'tight')
    
     if PLOT == False:
         plt.close(fig1) 

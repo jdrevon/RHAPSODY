@@ -6,9 +6,9 @@ Created on Tue Aug 11 14:14:23 2020
 @author: Julien
 """
 
-from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks
+from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks, CONCATENATE, resolution
 from initialisation_rings import rings
-from fits_reading_dico import OIFITS_READING, OIFITS_SORTING
+from fits_reading_dico import OIFITS_READING, OIFITS_SORTING, OIFITS_READING_concatenate
 from stock_dico_values import stock_V2_from_dico
 from create_folder import FOLDER_CREATION
 from remove_files_from_folder import REMOVE_ALL_FILES_FROM_FOLDER
@@ -46,12 +46,18 @@ if __name__ == '__main__':
     COPY_DATA(DATA_DIR, PROCESS_DIR)
 
     # SORT DATA in FOLDERS based on V2 and T3 flags:
-        
-    OIFITS_SORTING()
-        
-    # READ ALL THE DATA and put them in dicos in order to manipulate the data easily
     
-    OIFITS_TOT = OIFITS_READING()
+    if CONCATENATE == False:
+        
+        OIFITS_SORTING()
+        
+        # READ ALL THE DATA and put them in dicos in order to manipulate the data easily
+        OIFITS_TOT = OIFITS_READING()
+    
+    elif CONCATENATE == True:
+        
+        OIFITS_SORTING()
+        OIFITS_TOT = OIFITS_READING_concatenate()
         
     
     # We regroup all the usefull information that we want in simple masked array to handle easily the data for the fitting
@@ -171,7 +177,7 @@ if __name__ == '__main__':
             PATH_INTENSITY_PROFILE = PATH_OUTPUT_FIT_RES[k]+'intensity_%s_band.dat'%DATA_band_name[k]
 
             
-            distance, intensity, wavel = post_processing(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_INT[k], PATH_INTENSITY_PROFILE, list_wavel, image_rec_windows[k])    
+            distance, intensity, wavel = post_processing(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_INT[k], PATH_INTENSITY_PROFILE, list_wavel, image_rec_windows[k], resolution[k])    
     
             # SPECTRA
         
@@ -206,7 +212,7 @@ if __name__ == '__main__':
 
             #IMAGE RECONSTRUCTION:
             if inc_flag == True:
-                image_reconstruction(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_IMAGE_REC[k], DATA_band_name[k], diam_inner_ring[k], diam_outter_ring[k], image_rec_windows[k])
+                image_reconstruction(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_IMAGE_REC[k], DATA_band_name[k], diam_inner_ring[k], diam_outter_ring[k], image_rec_windows[k], resolution[k])
             else: None
                 
 

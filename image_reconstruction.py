@@ -5,6 +5,9 @@ Created on Mon May  2 19:09:19 2022
 @author: jdrevon
 """
 
+import istarmap
+import multiprocessing as mp
+from multiprocessing import Pool
 from pretty_table_reading import READ_PRETTY_TABLE
 import numpy as np
 from rhapsody_init import ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, nprocs
@@ -24,7 +27,8 @@ from plot_intensity_rec_model import plot_intensity_model_image
 from data_cube import image_to_data_cube
 import multiprocessing as mp
 from image_to_FFT import FFT_to_image
-
+import tqdm
+from scipy.signal import general_gaussian
 
 def coord_rotation(qu, qv, ang_tmp):
     
@@ -136,7 +140,7 @@ def rotatedRectWithMaxArea(w, h, angle):
 
 
 
-def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp, bounds, PATH_OUTPUT_IMAGE_REC):
+def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp, bounds, PATH_OUTPUT_IMAGE_REC, resolution):
 
     res_F = flux[m]
 
@@ -155,7 +159,6 @@ def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp
 
     q, image  = imaging_model(q_interp, Vis_tmp, max(q_interp)/np.sqrt(2)) # max(q_interp)/np.sqrt(2) weird artifacts test with Gaussian convolution
 
-    from scipy.signal import general_gaussian
     
     window = np.outer(general_gaussian(len(image),1.5,len(image)/14),general_gaussian(len(image),1.5,len(image)/14))
 
@@ -176,8 +179,6 @@ def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp
     
     qu_rot, qv_rot, q_rot = inv_coord_rotation(qu_inc, qv_inc, ang)
     image_rot = rotate(image_inc,ang, reshape= False)
-
-    from math import radians
     
     wr, hr = rotatedRectWithMaxArea(np.shape(image_rot)[0], np.shape(image_rot)[1], radians(inc))
     wr_lower  = int(np.floor(np.shape(image_rot)[0]/2-wr/2))
@@ -199,14 +200,14 @@ def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp
     
     func = interp2d(x, x, image)
     
-    x_new = np.linspace(-bounds,bounds, 512)
+    x_new = np.linspace(-bounds,bounds, resolution)
     
     cropped = func(x_new, x_new)
     
 
     return  cropped, x_new
 
-def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, diam_inner_ring, diam_outter_ring, bounds):
+def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, diam_inner_ring, diam_outter_ring, bounds, resolution):
     
     
     PATH_flux = PATH_OUTPUT_FIT_RES+'/fit_flux_ratio_'+band_name+'_band.dat'
@@ -243,18 +244,24 @@ def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, 
     
     print('START PLOTTING INTENSITY RADIAL PROFILES AND EQUIVALENT INCLINED/ROTATED 2D IMAGES')
 
-    pools = mp.Pool(processes=nprocs)    
-    result_parallels = pools.starmap(image_rec_function, [(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp, bounds, PATH_OUTPUT_IMAGE_REC) for m in range(len(wavel))])
 
-    pools.close()
-    pools.join()
+    stock_images = []    
 
-    stock_images = np.array([result_parallels[k][0] for k in range(len(result_parallels))])
-    x_new        = np.array([result_parallels[k][1] for k in range(len(result_parallels))])
+    with mp.Pool(processes=nprocs) as pool:
+        iterable = [(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp, bounds, PATH_OUTPUT_IMAGE_REC, resolution) for m in range(len(wavel))]
+            
+        for result in tqdm.tqdm(pool.istarmap(image_rec_function, iterable),
+                           total=len(iterable)):
+
+            stock_images.append(result[0])
+        x_new= result[1]
     
+    # stock_images = np.array([result_parallels[k][0] for k in range(len(result_parallels))])
+    # x_new        = np.array([result_parallels[k][1] for k in range(len(result_parallels))])
     
-    
+        
     image_to_data_cube(stock_images, x_new[0] , x_new[0], wavel, PATH_OUTPUT_FIT_RES, 'image_datacube_inc_rot')
+    
     print('END PLOTTING INTENSITY RADIAL PROFILES AND EQUIVALENT INCLINED/ROTATED 2D IMAGES')
 
 

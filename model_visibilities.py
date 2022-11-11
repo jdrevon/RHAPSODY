@@ -7,8 +7,11 @@ Created on Tue Jan 12 09:11:22 2021
 """
 
 import numpy as np
-from A1_mas_to_rad import mas_to_rad
 from scipy.special import j1,jv
+
+def mas_to_rad(diam_star):
+    y = diam_star*1E-3*np.pi/(180*3600)
+    return y 
 
 def V_uniform(qu, qv, diam):
     q = np.sqrt(qu**2+qv**2)

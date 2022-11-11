@@ -16,10 +16,14 @@ from plot_V2_obs_model import plot_V2_obs_model
 from f_prior import total_variation, quad_smoothness
 from plot_hist import plot_histogram
 from prettytable import PrettyTable
-import multiprocessing as mp
 from scipy.interpolate import interp1d
 from numpy import cos as cos
 from numpy import sin as sin
+import istarmap
+import multiprocessing as mp
+from multiprocessing import Pool
+import tqdm
+
 
 def coord_change(qu, qv, inclination_tmp, ang_tmp):
     
@@ -71,8 +75,9 @@ def short_model(params, q_DATA_fitting, qu_DATA_fitting, qv_DATA_fitting, q_inte
     elif REG_method == 'QS':
 
         f_prior = quad_smoothness(HP, I_tot_norm)    
-        
+    
     residuals = (Vis2-V2_DATA)/V2_DATA_ERR 
+    residuals[~np.isnan(residuals)]
     chi2_tot   = np.sum(residuals**2) + f_prior
 
     return chi2_tot
@@ -94,18 +99,22 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
     V2_DATA     = np.array(V2_DATA[cond])
     V2_DATA_ERR = np.array(V2_DATA_ERR[cond])                         
 
+    # print(np.shape(V2_DATA), np.shape(flux_ratio),np.shape(intensity_profile))
 
     res2 = minim(short_model, params2, args=(q_DATA_fitting, qu_DATA_fitting, qv_DATA_fitting, q_interp, qu_interp, qv_interp, V2_DATA, V2_DATA_ERR, HP, V_model, REG_method, intensity_profile, flux_ratio), method='COBYLA',max_nfev=max_iterations, tol = tolerance) # 5E-4 OK
 
-    print('WORK ON %.3f OVER'%(wavel_ALL[i]*1E6))
+    
+    # print('WORK ON %.3f OVER'%(wavel_ALL[i]*1E6))
     
     res_diam_outer_ring = [res2.params['diam_outer_ring'+str(k)].value for k in range(nb_ring)]
     res_diam_inner_ring = [res2.params['diam_inner_ring'+str(k)].value for k in range(nb_ring)]
     res_F_tmp = [res2.params['flux_ftot'+str(k)].value for k in range(nb_ring)]
-    
+        
     inc = res2.params['inclination'].value
     ang  = res2.params['angle'].value
     
+    # print(res_F_tmp, inc, ang)
+
     # This function has been already included in the computation of the chi2 but have to be also execute in the output to take into consideration the different changes made on the flux values.
     # Here we say that wa cannot have an intensity higher than the central uniform disk. Which is in the continuity of our initial condition.
     
@@ -176,6 +185,12 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
     # CHI2:
 
     N = len(V2_DATA)
+    
+    V2_fitting[~np.isnan(V2_fitting)]
+    V2_DATA[~np.isnan(V2_fitting)]
+    V2_DATA_ERR[~np.isnan(V2_fitting)]
+
+    
     chi2_tmp = np.sum(((V2_DATA-V2_fitting)/V2_DATA_ERR)**2)
     # chi2[i]=chi2_tmp
 
@@ -209,10 +224,7 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
     I_tot = I_tot_norm
 
     # print(fit_report(res2))
-
-    # print('WORK ON %.3f OVER'%wavel_ALL[i])
-
-    
+    # print(wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot, inc, ang)
     return  wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot, inc, ang
 
 
@@ -268,21 +280,33 @@ def UD_modeling(wavel_DATA, q_DATA, qu_DATA, qv_DATA, V2_DATA, V2_DATA_ERR,\
     # OK LET'S GO FIT: DON'T STOP ME NOW !
     
     for k in range(len(DATA_band_name)):
-
+        result_parallel = []
         list_wavel = np.unique(wavel_DATA[k])
         
         print('STARTING FITTING on %s band'%DATA_band_name[k])
     
-        pool = mp.Pool(processes=nprocs)    
-        result_parallel = pool.starmap(fitting_function, [(i, list_wavel, wavel_DATA[k], HP, diam_outter_ring[k], \
-                             params_TOT[k], q_interp[k], qu_interp[k], qv_interp[k], q_DATA[k], qu_DATA[k], qv_DATA[k], \
-                                     I_norm[k], flux_ratio[k], \
-                                             V2_DATA[k], V2_DATA_ERR[k], V_model[k], \
-                                                 PATH_OUTPUT_VIS[k], PATH_OUTPUT_HIST[k]) for i in range(len(list_wavel))])
-    
-        pool.close()
-        pool.join()
-    
+        
+        with mp.Pool(processes=nprocs) as pool:
+            iterable = [(i, list_wavel, wavel_DATA[k], HP, diam_outter_ring[k], \
+                                  params_TOT[k], q_interp[k], qu_interp[k], qv_interp[k], q_DATA[k], qu_DATA[k], qv_DATA[k], \
+                                          I_norm[k], flux_ratio[k], \
+                                                  V2_DATA[k], V2_DATA_ERR[k], V_model[k], \
+                                                      PATH_OUTPUT_VIS[k], PATH_OUTPUT_HIST[k]) for i in range(len(list_wavel))]
+            
+                
+            for result in tqdm.tqdm(pool.istarmap(fitting_function, iterable),
+                               total=len(iterable)):
+                result_parallel.append(result)
+                
+        # pool = mp.Pool(processes=nprocs)    
+        # result_parallel = tqdm.tqdm(pool.starmap(fitting_function, [(i, list_wavel, wavel_DATA[k], HP, diam_outter_ring[k], \
+        #                       params_TOT[k], q_interp[k], qu_interp[k], qv_interp[k], q_DATA[k], qu_DATA[k], qv_DATA[k], \
+        #                               I_norm[k], flux_ratio[k], \
+        #                                       V2_DATA[k], V2_DATA_ERR[k], V_model[k], \
+        #                                           PATH_OUTPUT_VIS[k], PATH_OUTPUT_HIST[k]) for i in range(len(list_wavel))]),total=len(list_wavel))
+                  
+        # pool.close()
+        # pool.join()
     
     
         list_wavel, resultat, chi2, chi2_red, f_prior, chi2_tot, res_F, I_tot, inc, angle = np.array(result_parallel).T

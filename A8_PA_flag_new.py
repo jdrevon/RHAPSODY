@@ -9,7 +9,7 @@ import numpy as np
 
 def flag_PA_new(x):  
 
-    flag = np.zeros(len(x))
+    flag = np.ones(len(x))*np.nan
     bornes_test = np.linspace(-180,180,18+1)
     index_0_test = int(np.where(bornes_test==0)[0][0])
     for k in range(len(x)):        

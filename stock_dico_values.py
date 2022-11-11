@@ -41,7 +41,7 @@ def stock_V2_from_dico(OIFITS_TOT):
                 V2_tmp         = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['VIS2'].astype('float'))
                 V2_err_tmp     = ma.concatenate(OIFITS_TOT[k][i]['VIS2']['VIS2_ERR'].astype('float'))
 
-            except: # In the cas only 1 wavelenght is present
+            except: # In the case only 1 wavelenght is present
                 
                 print('INFO: ONLY 1 wavelenght is detected in the file')
                 

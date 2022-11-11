@@ -5,6 +5,7 @@ Created on Tue Oct 12 10:58:06 2021
 
 @author: jdrevon
 """
+import numpy as np
 
 ############ DIRECTORIES:
     
@@ -16,9 +17,13 @@ Created on Tue Oct 12 10:58:06 2021
 
 # DATA_DIR = ["C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/beauty_contest"] #Path for all the different bands
 
-DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/DATA_STRONG_sorting/MED/2018_12"]
-             #Path for all the different bands
+# DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/DATA_STRONG_sorting/MED/2018_12"]
 
+CONCATENATE = True
+
+DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/NEW_CALIBRATED_DATA_TF/2018/MERGE_SORTED/JMMC_OIFITS/test"]
+# DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/NEW_CALIBRATED_DATA_TF/2018/MERGE_SORTED/LM"]
+             #Path for all the different bands
 
 # FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
 
@@ -45,8 +50,8 @@ nprocs = 8 # Nbr of cores
 # DATA_band_max  = [4.00,12.50] #µm
 
 DATA_band_name = ['LM'] 
-DATA_band_min  = [2.81]  #µm 
-DATA_band_max  = [2.82] #µm
+DATA_band_min  = [3.0]  #µm 
+DATA_band_max  = [3.8] #µm
 
 # DATA_band_name = ['LM', 'N'] 
 # DATA_band_min  = [2.8, 8.50]  #µm 
@@ -69,7 +74,7 @@ DATA_band_max  = [2.82] #µm
 #        (viserr > 0)         &\
 #        (viserr < 0.1)    #   &\
 
-REFLAGGING_DATA = True
+REFLAGGING_DATA = True #only available for now for non-concatanated data
 
 
 # Does the error bar on visibilities seems underestimated? 
@@ -93,7 +98,7 @@ OIFITS_FLUX = False
 # NBR_ring  = [56,60] # NBR_ring [#] : number of rings to put in the model for the different bands
 
 
-size_ring = [1]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+size_ring = [1.3]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
 NBR_ring  = [100]     # NBR_ring [#] : number of rings to put in the model for the different bands
 
 init = 'D' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
@@ -106,13 +111,14 @@ alpha  = [.2] # alpha [#] : Power law of the intensity profile for each bands (1
 
 # For G profile:
     
-# sigma = [3,10]    # sigma [mas] : Standard deviation of the intensity profile for each bands 
+# FWHM = [3,10]    # sigma [mas] : FWHM of the intensity profile for each bands 
 
-sigma = [10]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
+FWHM = [20]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
+sigma = (np.array(FWHM)/2.3).tolist()
 
 # For Uniform Disk 
 
-diam_disk = [20] # [mas] : Diameter of the Uniform Disk
+diam_disk = [10] # [mas] : Diameter of the Uniform Disk
 
 ########### Method of Regularization: 
 
@@ -125,7 +131,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [1E3] # µ
+HP = [1E1] # µ
 
 ########### Fitting Parameters:
     
@@ -142,7 +148,7 @@ FITTING = False
 # If READING ONLY = True, the routine will only read the previous data fitted and located in the folders #
 # If READING ONLY = False, the routine will only take the initial parameters to build the model          #
                                                                                                          #
-READING_ONLY = False                                                                                      #
+READING_ONLY = True                                                                                      #
                                                                                                          #
 ##########################################################################################################
 
@@ -151,7 +157,7 @@ READING_ONLY = False                                                            
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
 fitting_method  = 'COBYLA' 
-tolerance       = 5E-4 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
+tolerance       = 5E-1 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
 max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergence
 
 # FLATNESS
@@ -174,8 +180,8 @@ max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergen
 
 inc_flag       = True # If you want to activate the inclination option set "True" otherwise set "False" and put 0 as initial guess.
 
-inc_guess      = [50] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination. 0 will be set by defaut if inc_flag = False
-angle_guess    = [40] # orientation angle of the structure # 0° = no orientation. 0 will be set by defaut if inc_flag = False
+inc_guess      = [0] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination. 0 will be set by defaut if inc_flag = False
+angle_guess    = [0] # orientation angle of the structure # 0° = no orientation. 0 will be set by defaut if inc_flag = False
 
 ########### Set the resolution of the modeled curve for the plot:
 
@@ -194,7 +200,9 @@ model_rho     = [1000] # Number of points in the model for each bands
 ########### Set the windows in mas of the images:
 
 image_rec_windows = [100] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
-                                        # ex= [800] ==> -400 mas ---////---- + 400 mas
+                                        # ex= [800] ==> -800 mas ---////---- + 800 mas
+
+resolution = [128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
 
 ########### Set the properties of the intensity profile spectra:
 
