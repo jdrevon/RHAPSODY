@@ -41,7 +41,7 @@ ntelescope = 4 #4
 
 ############ PARALLELIZATION:
     
-nprocs = 8 # Nbr of cores 
+nprocs = 6 # Nbr of cores 
 
 ############ DATA WVL ranges
 #Ex:
@@ -51,7 +51,7 @@ nprocs = 8 # Nbr of cores
 
 DATA_band_name = ['LM'] 
 DATA_band_min  = [3.0]  #µm 
-DATA_band_max  = [3.8] #µm
+DATA_band_max  = [3.1] #µm
 
 # DATA_band_name = ['LM', 'N'] 
 # DATA_band_min  = [2.8, 8.50]  #µm 
@@ -139,7 +139,7 @@ HP = [1E1] # µ
 
 #This routine aims to gives you the choice to run the fitting process with fitting or not. If not, the routine will only run the code with the initial parameters.
 
-FITTING = False
+FITTING = True
 
 ##### OPTIONNAL FEATURE ##################################################################################
                                                                                                          #
@@ -203,6 +203,10 @@ image_rec_windows = [100] # The maximum radial distance that the user want to di
                                         # ex= [800] ==> -800 mas ---////---- + 800 mas
 
 resolution = [128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
+
+fft_nb_points = [2000] # Number of points used to reconstruct the image in the Fourier Plane of size (fft_nb_point*fft_nb_points)
+fft_q_min = [4] # logarithmic power of the minimum spatial frequency to be interpolated in the Fourier Plane
+fft_q_max = [9] # logarithmic power of the maximum spatial frequency to be interpolated in the Fourier Plane
 
 ########### Set the properties of the intensity profile spectra:
 

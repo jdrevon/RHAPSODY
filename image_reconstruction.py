@@ -158,17 +158,16 @@ def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp
     # A convoluer par une gaussienne  
 
     q, image  = imaging_model(q_interp, Vis_tmp, max(q_interp)/np.sqrt(2)) # max(q_interp)/np.sqrt(2) weird artifacts test with Gaussian convolution
-
+    
+    # np.sqrt(2) is here to cut the image to not see the circle shape
     
     window = np.outer(general_gaussian(len(image),1.5,len(image)/14),general_gaussian(len(image),1.5,len(image)/14))
 
-    # plt.figure()
-    # plt.imshow(np.abs(np.real(image))**0.2)
+    # len(image)/14 is the standard deviation of the Gaussian with a number of point equal to len(image)
 
     image = window * image
-
-    # plt.figure()
-    # plt.imshow(image**0.2)
+    
+    # Above, I modulate the fourier transform image by a gaussian ==> IMPROVEMENT == convolved by a Door function ending with smoothed wings. 
     
     qu = q
     qv = q
@@ -207,7 +206,7 @@ def image_rec_function(m, wavel, flux, inc_all, angle_all, V_model_TOT, q_interp
 
     return  cropped, x_new
 
-def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, diam_inner_ring, diam_outter_ring, bounds, resolution):
+def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, diam_inner_ring, diam_outter_ring, bounds, resolution, fft_q_min, fft_q_max, fft_nb):
     
     
     PATH_flux = PATH_OUTPUT_FIT_RES+'/fit_flux_ratio_'+band_name+'_band.dat'
@@ -229,13 +228,14 @@ def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, 
     
     
     # Pre-Computing for each bandwidth the associated modeled visibilities for each rings
-        
+    
+    
                         
     # qu_interp = np.array([0]+np.logspace(4, 9, 1500).tolist())
     # qv_interp = np.array([0]+np.logspace(4, 9, 1500).tolist())
 
-    qu_interp = np.array([0]+np.logspace(4, 9, 2000).tolist())
-    qv_interp = np.array([0]+np.logspace(4, 9, 2000).tolist())
+    qu_interp = np.array([0]+np.logspace(fft_q_min, fft_q_max, fft_nb).tolist())
+    qv_interp = np.array([0]+np.logspace(fft_q_min, fft_q_max, fft_nb).tolist())
 
     V_tmp = [V_ring(qu_interp, qv_interp, diam_inner_ring[j],diam_outter_ring[j]) for j in range(len(diam_outter_ring))]            
     q_interp=np.sqrt(qu_interp**2+qv_interp**2)
@@ -260,7 +260,7 @@ def image_reconstruction(PATH_OUTPUT_FIT_RES, PATH_OUTPUT_IMAGE_REC, band_name, 
     # x_new        = np.array([result_parallels[k][1] for k in range(len(result_parallels))])
     
         
-    image_to_data_cube(stock_images, x_new[0] , x_new[0], wavel, PATH_OUTPUT_FIT_RES, 'image_datacube_inc_rot')
+    image_to_data_cube(stock_images, x_new , x_new, wavel, PATH_OUTPUT_FIT_RES, 'image_datacube_inc_rot')
     
     print('END PLOTTING INTENSITY RADIAL PROFILES AND EQUIVALENT INCLINED/ROTATED 2D IMAGES')
 

@@ -6,7 +6,7 @@ Created on Tue Aug 11 14:14:23 2020
 @author: Julien
 """
 
-from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks, CONCATENATE, resolution
+from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks, CONCATENATE, resolution, fft_q_min, fft_q_max, fft_nb_points
 from initialisation_rings import rings
 from fits_reading_dico import OIFITS_READING, OIFITS_SORTING, OIFITS_READING_concatenate
 from stock_dico_values import stock_V2_from_dico
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
             #IMAGE RECONSTRUCTION:
             if inc_flag == True:
-                image_reconstruction(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_IMAGE_REC[k], DATA_band_name[k], diam_inner_ring[k], diam_outter_ring[k], image_rec_windows[k], resolution[k])
+                image_reconstruction(PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_IMAGE_REC[k], DATA_band_name[k], diam_inner_ring[k], diam_outter_ring[k], image_rec_windows[k], resolution[k], fft_q_min[k], fft_q_max[k], fft_nb_points[k])
             else: None
                 
 
