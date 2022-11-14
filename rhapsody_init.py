@@ -148,7 +148,7 @@ FITTING = True
 # If READING ONLY = True, the routine will only read the previous data fitted and located in the folders #
 # If READING ONLY = False, the routine will only take the initial parameters to build the model          #
                                                                                                          #
-READING_ONLY = True                                                                                      #
+READING_ONLY = False                                                                                     #
                                                                                                          #
 ##########################################################################################################
 
