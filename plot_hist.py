@@ -14,7 +14,8 @@ def plot_histogram(V2_obs,V2_obs_err,V2_model, wavel_UD, **kwargs):
     PLOT        = kwargs.get('PLOT', False)    
     SAVE_OUTPUT = kwargs.get('SAVE_OUTPUT', None)    
 
-    
+    # plt.ioff()
+
     fig2 = plt.figure()
     V2_hist=(V2_model-V2_obs)/V2_obs_err  
     median_hist = np.median(V2_hist)

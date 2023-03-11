@@ -22,7 +22,7 @@ def plot_intensity_model_image(x_model, image_model, wavel_UD, R_image, **kwargs
     PLOT        = kwargs.get('PLOT', False)    
     SAVE_OUTPUT = kwargs.get('SAVE_OUTPUT', None)    
         
-       
+    # plt.ioff()       
     fig1, axs = plt.subplots()
 
     im=axs.imshow(abs(image_model),extent=[min(x_model),max(x_model),min(x_model),max(x_model)], cmap = 'hot')#,norm=colors.PowerNorm(gamma=0.5))#, norm=colors.PowerNorm(gamma=1.5))
@@ -77,7 +77,8 @@ def plot_intensity_model_profile(x_model, y_model, wavel_UD, **kwargs):
     ylim_min    = kwargs.get('ylim_min', -0.05)
     ylim_max    = kwargs.get('ylim_max', 1.05)
         
-        
+    plt.ioff()
+
     fig2 = plt.figure()
     axs2 = plt.gca()
     axs2.plot(x_model,y_model, label='Reconstructive Profile')

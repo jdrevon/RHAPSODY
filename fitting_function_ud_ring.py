@@ -225,6 +225,7 @@ def fitting_function(i, wavel_ALL, wavel_DATA, HP, diam_outter_ring, \
 
     # print(fit_report(res2))
     # print(wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot, inc, ang)
+    
     return  wavel_ALL[i], res2, chi2_tmp, chi2_red, f_prior_tmp, chi2_tot_tmp, res_F, I_tot, inc, ang
 
 
@@ -296,7 +297,11 @@ def UD_modeling(wavel_DATA, q_DATA, qu_DATA, qv_DATA, V2_DATA, V2_DATA_ERR,\
                 
             for result in tqdm.tqdm(pool.istarmap(fitting_function, iterable),
                                total=len(iterable)):
-                result_parallel.append(result)
+                result_parallel.append(np.array(result, dtype=object))
+            # import sys
+            # sys.exit()
+            # print(np.shape(np.array(result_parallel)[0]))
+            # print(np.shape(np.array(result_parallel).T[0]))
                 
         # pool = mp.Pool(processes=nprocs)    
         # result_parallel = tqdm.tqdm(pool.starmap(fitting_function, [(i, list_wavel, wavel_DATA[k], HP, diam_outter_ring[k], \
@@ -309,7 +314,7 @@ def UD_modeling(wavel_DATA, q_DATA, qu_DATA, qv_DATA, V2_DATA, V2_DATA_ERR,\
         # pool.join()
     
     
-        list_wavel, resultat, chi2, chi2_red, f_prior, chi2_tot, res_F, I_tot, inc, angle = np.array(result_parallel).T
+        list_wavel, resultat, chi2, chi2_red, f_prior, chi2_tot, res_F, I_tot, inc, angle = np.array(result_parallel, dtype=object).T
 
         print('END FITTING on %s band'%DATA_band_name[k])
         

@@ -14,7 +14,7 @@ def increase_intensity_profile_res(PATH_INTENSITY_PROFILE,**kwargs):
     
         header, data = READ_PRETTY_TABLE(PATH_INTENSITY_PROFILE,1)
         
-        wavel = (header[1:]).astype(np.float)
+        wavel = (header[1:]).astype('float')
         inner_radius = (data[:,0]-np.diff(data[:,0])[0])
         intensity = data[:,1:].T
         
@@ -37,7 +37,7 @@ def increase_intensity_profile_res_1W(PATH_INTENSITY_PROFILE,**kwargs):
     
         header, data = READ_PRETTY_TABLE(PATH_INTENSITY_PROFILE,1)
         
-        wavel = (header[1:]).astype(np.float)
+        wavel = (header[1:]).astype('float')
         inner_radius = (data[:,0]-np.diff(data[:,0])[0])
         intensity = data[:,1:].T
         

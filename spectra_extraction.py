@@ -12,7 +12,6 @@ import numpy.ma as ma
 from rhapsody_init import ntelescope
 from prettytable import PrettyTable
 
-
 def spectra_data(OIFITS_TOT, PATH_OUTPUT_FIT_RES, PATH_OUTPUT_SPECTRA):
     
     
@@ -38,7 +37,6 @@ def spectra_data(OIFITS_TOT, PATH_OUTPUT_FIT_RES, PATH_OUTPUT_SPECTRA):
     FLUX_ERR       = np.zeros((len(OIFITS_TOT),ntelescope,len(OIFITS_TOT[0]['WAVEL'])))
     wavel          = np.zeros((len(OIFITS_TOT),ntelescope,len(OIFITS_TOT[0]['WAVEL'])))
     
-
     for j in range(len(AT)):
          
         for i in range(len(OIFITS_TOT)):

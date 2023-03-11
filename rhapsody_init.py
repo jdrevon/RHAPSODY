@@ -19,15 +19,19 @@ import numpy as np
 
 # DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/DATA_STRONG_sorting/MED/2018_12"]
 
-CONCATENATE = True
 
-DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/NEW_CALIBRATED_DATA_TF/2018/MERGE_SORTED/JMMC_OIFITS/test"]
+CONCATENATE = False  #CONCATENATE = True only if files are concatenated files (with several visibility tables, wavalenghts, etc...)
+
+
+# Be carefull the data should have the .fits, .oifits files will not work !
+DATA_DIR = ["C:/Users/jdrevon/partage/THESE/DATA/DATA_RSCL_test/NOMEANBCD/LM",
+            "C:/Users/jdrevon/partage/THESE/DATA/DATA_RSCL_test/NOMEANBCD/N"]
 # DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/NEW_CALIBRATED_DATA_TF/2018/MERGE_SORTED/LM"]
              #Path for all the different bands
 
 # FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
 
-PROCESS_DIR = "C:/Users/jdrevon/Desktop/test_betelgeuse_rhapsody"
+PROCESS_DIR = "C:/Users/jdrevon/Desktop/RSclRHAPSODY"
 
 # PROCESS_DIR = "C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/beauty_contest"
 
@@ -45,13 +49,13 @@ nprocs = 6 # Nbr of cores
 
 ############ DATA WVL ranges
 #Ex:
-# DATA_band_name = ['LM','N'] 
-# DATA_band_min  = [2.96,8.50]  #µm  
-# DATA_band_max  = [4.00,12.50] #µm
+DATA_band_name = ['LM','N'] 
+DATA_band_min  = [2.8,8.50]  #µm  
+DATA_band_max  = [4.00,12.50] #µm
 
-DATA_band_name = ['LM'] 
-DATA_band_min  = [3.0]  #µm 
-DATA_band_max  = [3.1] #µm
+# DATA_band_name = ['H'] 
+# DATA_band_min  = [1.0]  #µm 
+# DATA_band_max  = [2.0] #µm
 
 # DATA_band_name = ['LM', 'N'] 
 # DATA_band_min  = [2.8, 8.50]  #µm 
@@ -84,12 +88,13 @@ REFLAGGING_DATA = True #only available for now for non-concatanated data
 # ERROR_SUP = [0.03,0.03]
 
 # ERROR_SUP = [0.02,0.02,0.02,0.02]
-ERROR_SUP = [0]
+# ERROR_SUP = [0.0001,0.0001]
+ERROR_SUP = [0.03,0.03]
 
 # FLUX
 # Is the OIFITS_FLUX table is provided in the data? If Yes, please set True, if not set False
 
-OIFITS_FLUX = False
+OIFITS_FLUX = True
 
 
 ########### RINGS:
@@ -98,10 +103,10 @@ OIFITS_FLUX = False
 # NBR_ring  = [56,60] # NBR_ring [#] : number of rings to put in the model for the different bands
 
 
-size_ring = [1.3]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
-NBR_ring  = [100]     # NBR_ring [#] : number of rings to put in the model for the different bands
+size_ring = [2,5]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+NBR_ring  = [56,60]     # NBR_ring [#] : number of rings to put in the model for the different bands
 
-init = 'D' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
+init = 'G' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
 
 # For PW profile:
 
@@ -113,12 +118,12 @@ alpha  = [.2] # alpha [#] : Power law of the intensity profile for each bands (1
     
 # FWHM = [3,10]    # sigma [mas] : FWHM of the intensity profile for each bands 
 
-FWHM = [20]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
+FWHM = [5,10]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
 sigma = (np.array(FWHM)/2.3).tolist()
 
 # For Uniform Disk 
 
-diam_disk = [10] # [mas] : Diameter of the Uniform Disk
+diam_disk = [43] # [mas] : Diameter of the Uniform Disk
 
 ########### Method of Regularization: 
 
@@ -131,7 +136,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [1E1] # µ
+HP = [4E3] # µ
 
 ########### Fitting Parameters:
     
@@ -157,7 +162,7 @@ READING_ONLY = False                                                            
 # Please see the different method available here: https://lmfit.github.io/lmfit-py/fitting.html
  
 fitting_method  = 'COBYLA' 
-tolerance       = 5E-1 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
+tolerance       = 8E-4 #5E-4 fitting and parameter tolerance see lmfit documentation for further explanation (the lower the tolerance value the higher the precision but the longer the computer time)
 max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergence
 
 # FLATNESS
@@ -178,31 +183,31 @@ max_iterations  = 1E6  # Maximum of iterations before stopping for non-convergen
 # angle_guess    = [80] # orientation angle of the structure # 0° = no orientation
 
 
-inc_flag       = True # If you want to activate the inclination option set "True" otherwise set "False" and put 0 as initial guess.
+inc_flag       = False # If you want to activate the inclination option set "True" otherwise set "False" and put 0 as initial guess.
 
-inc_guess      = [0] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination. 0 will be set by defaut if inc_flag = False
-angle_guess    = [0] # orientation angle of the structure # 0° = no orientation. 0 will be set by defaut if inc_flag = False
+inc_guess      = [45] # 0 ==> centro-symmetric (no inclination), >0 ==> inclination. 0 will be set by defaut if inc_flag = False
+angle_guess    = [45] # orientation angle of the structure # 0° = no orientation. 0 will be set by defaut if inc_flag = False
 
 ########### Set the resolution of the modeled curve for the plot:
 
-model_visibilities = [2000] #Number of points to interpolate the visibilities (the higher the flatness value is, the higher the number of points is required) 
+model_visibilities = [2000,2000] #Number of points to interpolate the visibilities (the higher the flatness value is, the higher the number of points is required) 
 
 # model_rho_min = [None, None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
 # model_rho_max = [None, None] # [rad^-1] If None the intensity profile ends at the model edges
 # model_rho     = [1000, 1000] # Number of points in the model for each bands
 
 
-model_rho_min = [None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
-model_rho_max = [None] # [rad^-1] If None the intensity profile ends at the model edges
-model_rho     = [1000] # Number of points in the model for each bands
+model_rho_min = [None, None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
+model_rho_max = [None, None] # [rad^-1] If None the intensity profile ends at the model edges
+model_rho     = [1000, 1000] # Number of points in the model for each bands
 
 
 ########### Set the windows in mas of the images:
 
-image_rec_windows = [100] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
+image_rec_windows = [30,30] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
                                         # ex= [800] ==> -800 mas ---////---- + 800 mas
 
-resolution = [128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
+resolution = [128, 128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
 
 fft_nb_points = [2000] # Number of points used to reconstruct the image in the Fourier Plane of size (fft_nb_point*fft_nb_points)
 fft_q_min = [4] # logarithmic power of the minimum spatial frequency to be interpolated in the Fourier Plane
@@ -216,16 +221,16 @@ fft_q_max = [9] # logarithmic power of the maximum spatial frequency to be inter
 manual_borders = True    
 
 # And now set your borders 
-# ex: borders_spectra = [ [min of BAND 1 ,max of BAND 1], [min of BAND 2 ,max of BAND 2]] 
+# ex: borders_spectra = [ [min of BORDERS BAND 1 ,max of BORDERS BAND 1], [min of BORDERS BAND 2 ,max of BORDERS BAND 2]] 
 
-borders_spectra = [[0.5, 100]]
+borders_spectra = [[3, 120],[3,120]]
 
 #6 : If you want to add some ticks in the specta of the radial profile put them here:
     
 # example: additionnal_ticks = [ [TICKS FOR THE FIRST BAND], [TICKS FOR THE FIRST BAND] ]
 # Let the array empty if you don't want the additionnal ticks
 
-additionnal_ticks= [ [10,20,50]]
+additionnal_ticks= [[12, 18, 25, 75, 120 ], [12, 18, 25, 75, 120]]
 
 
 

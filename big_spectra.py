@@ -18,7 +18,7 @@ from A1_mas_to_rad import au_to_R_sun
 def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPECTRA, additionnal_ticks, **kwargs):
     
     borders           = kwargs.get('borders', 999)    
-    
+
     widths  = [1]
     heights = [1,5]
 
@@ -35,7 +35,7 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
     # First part of the plot deal with intensity profile
     
     # plot1=ax1.pcolor(W,D,intensity,norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
-    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap)
+    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
             
     ax1.set_yscale('log')
     if borders != 999:    
@@ -102,6 +102,7 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA, additionnal_tic
 
     mp   = cm.lajolla
     rmap = mp.reversed()     
+    plt.ioff()
 
     fig=plt.figure(figsize=(4, 12))
 
@@ -109,7 +110,7 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA, additionnal_tic
 
     # First part of the plot deal with intensity profile
     
-    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap)
+    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
             
     ax1.set_yscale('log')
 

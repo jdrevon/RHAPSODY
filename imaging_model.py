@@ -112,7 +112,7 @@ def increase_intensity_resolution(FILE_PATH_FLUX, len_UD, wavel_um):
         header,data = READ_PRETTY_TABLE(FILE_PATH_FLUX,1)
 
         
-        rho_UD = header[1:-1].astype(np.float)
+        rho_UD = header[1:-1].astype('float')
         res_UD = rho_UD*2
         res_UD_bef = res_UD-np.diff(res_UD)[0]
 

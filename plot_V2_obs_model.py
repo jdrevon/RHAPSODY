@@ -38,6 +38,7 @@ def plot_V2_obs_model(x_obs,y_obs, x_model, y_model, wavel_obs, **kwargs):
     
     # print(PLOT,SAVE_OUTPUT,logx,logy,xlim_min,xlim_max,ylim_min, ylim_max)
     
+    # plt.ioff()
     
     fig1 = plt.figure()
     axs1 = plt.gca()
