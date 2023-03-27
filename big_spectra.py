@@ -34,7 +34,6 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
 
     # First part of the plot deal with intensity profile
     
-    # plot1=ax1.pcolor(W,D,intensity,norm=colors.LogNorm(vmin=1E-4, vmax=1),shading='auto', cmap=rmap)
     plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
             
     ax1.set_yscale('log')
@@ -47,9 +46,28 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
     ax1.set_yticks(additionnal_ticks)            
     ax1.yaxis.set_ticks_position('both')
 
+    
+    if W[0][0] < 5:
+        
+        ax1.hlines(5.3, xmin = 2.83, xmax= 4.0, color='tab:blue', ls='--')
+        
+        ax1.hlines(12, xmin = 2.83, xmax= 4.0, color='chartreuse')
+        ax1.hlines(18, xmin = 2.83, xmax= 4.0, color='chartreuse')
+        
+        ax1.hlines(24.5, xmin = 2.83, xmax= 4.0, color='tab:blue')
+    
+        ax1.plot(W[0],W[0]/(W[0][0])*30, c='white',linestyle='--')
+        ax1.plot(W[0],W[0]/(W[0][0])*19, c='white',linestyle='--')
 
+    else:
 
-    ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
+        ax1.hlines(5.3, xmin = 8.53, xmax= 12.48, color='tab:blue', ls='--')
+
+        ax1.plot(W[0],W[0]/(W[0][0])*55, c='white',linestyle='--')
+        ax1.plot(W[0],W[0]/(W[0][0])*45, c='white',linestyle='--')
+    
+
+    ax1.set_ylabel("Distance angulaire au centre de l'étoile [mas]",fontsize = 13)
     ax1.tick_params(axis='both', labelsize=13)
     ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
     ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -78,7 +96,7 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
     ax3.tick_params(axis='both', labelsize=15)
     ax3.set_xlim(np.amin(W),np.amax(W))
     ax3.set_ylim(0.5,1.5)
-    ax3.set_ylabel('Normalized Flux',fontsize =15)
+    ax3.set_ylabel('Flux normalisé',fontsize =15)
 
     ax3.plot(np.sort(wavel_MATISSE_flux),[x for _, x in sorted(zip(wavel_MATISSE_flux, MATISSE_flux))], label = 'MATISSE')
     ax3.minorticks_on()
@@ -86,7 +104,7 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
 
     handles, labels = [(a + b + c) for a, b, c in zip(ax1.get_legend_handles_labels(), ax1.get_legend_handles_labels(), ax3.get_legend_handles_labels())]
     fig1=ax1.figure
-    fig1.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
+    fig1.text(0.5,0.04, r'$\lambda$ [µm]',fontsize = 15, ha="center", va="center")
     
     # plt.setp(ax1.get_yticklabels(), visible=False)
 
@@ -122,7 +140,7 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA, additionnal_tic
     ax1.set_yticks(additionnal_ticks)    
     ax1.yaxis.set_ticks_position('both')
 
-    ax1.set_ylabel('Angular distance from the star center [mas]',fontsize = 13)
+    ax1.set_ylabel("Distance angulaire au centre de l'étoile [mas]",fontsize = 13)
     ax1.tick_params(axis='both', labelsize=13)
     ax1.get_xaxis().get_major_formatter().labelOnlyBase = False
     ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -133,7 +151,7 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA, additionnal_tic
     fig.colorbar(plot1, cax=cbar_ax).set_label(label=r'$I(\rho)/I(0)$',size=13)
     fig.colorbar(plot1, cax=cbar_ax).ax.tick_params(labelsize=13) 
 
-    fig.text(0.5,0.04, 'Wavelength [µm]',fontsize = 15, ha="center", va="center")
+    fig.text(0.5,0.04, r'$\lambda$ [µm]',fontsize = 15, ha="center", va="center")
 
     plt.savefig(PATH_OUTPUT_SPECTRA+'big_spectra.jpg',bbox_inches='tight', dpi=400)
     plt.close(fig)

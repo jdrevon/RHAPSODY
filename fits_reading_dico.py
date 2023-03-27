@@ -216,7 +216,7 @@ def OIFITS_READING_concatenate():
     
         for k in range(len(list_files[f])):
             
-            with fits.open(list_files[i][k], memmap=False) as fichier:
+            with fits.open(list_files[f][k], memmap=False) as fichier:
 
     
                 dic                       = {}
