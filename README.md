@@ -1,6 +1,24 @@
 # RHAPSODY
 Reconstructing Hankel rAdial Profiles in centro-Symmetric Objects with Discrete rings for astrophYsics
 
+Non-standard required dependencies:
+
+PACKAGES:
+
+lmfit,prettytable,cmcrameri
+
+Installation with anaconda:
+
+conda install -c conda-forge lmfit
+conda install -c conda-forge prettytable
+conda install -c conda-forge cmcrameri
+
+Installation with Python:
+
+pip install lmfit
+pip install prettytable
+pip install cmcrameri
+
 #PROCESSING AREA#
 
 1. edit rhapody_init.py
