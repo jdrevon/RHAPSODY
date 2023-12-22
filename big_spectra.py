@@ -34,7 +34,8 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
 
     # First part of the plot deal with intensity profile
     
-    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
+    # plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
+    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=mp, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
             
     ax1.set_yscale('log')
     if borders != 999:    
@@ -47,24 +48,24 @@ def big_spectra_with_flux(W,D,intensity, FLUX_WAVEL, FLUX_DATA, PATH_OUTPUT_SPEC
     ax1.yaxis.set_ticks_position('both')
 
     
-    if W[0][0] < 5:
+    # if W[0][0] < 5:
         
-        ax1.hlines(5.3, xmin = 2.83, xmax= 4.0, color='tab:blue', ls='--')
+    #     ax1.hlines(5.3, xmin = 2.83, xmax= 4.0, color='tab:blue', ls='--')
         
-        ax1.hlines(12, xmin = 2.83, xmax= 4.0, color='chartreuse')
-        ax1.hlines(18, xmin = 2.83, xmax= 4.0, color='chartreuse')
+    #     ax1.hlines(12, xmin = 2.83, xmax= 4.0, color='chartreuse')
+    #     ax1.hlines(18, xmin = 2.83, xmax= 4.0, color='chartreuse')
         
-        ax1.hlines(24.5, xmin = 2.83, xmax= 4.0, color='tab:blue')
+    #     ax1.hlines(24.5, xmin = 2.83, xmax= 4.0, color='tab:blue')
     
-        ax1.plot(W[0],W[0]/(W[0][0])*30, c='white',linestyle='--')
-        ax1.plot(W[0],W[0]/(W[0][0])*19, c='white',linestyle='--')
+    #     ax1.plot(W[0],W[0]/(W[0][0])*30, c='white',linestyle='--')
+    #     ax1.plot(W[0],W[0]/(W[0][0])*19, c='white',linestyle='--')
 
-    else:
+    # else:
 
-        ax1.hlines(5.3, xmin = 8.53, xmax= 12.48, color='tab:blue', ls='--')
+    #     ax1.hlines(5.3, xmin = 8.53, xmax= 12.48, color='tab:blue', ls='--')
 
-        ax1.plot(W[0],W[0]/(W[0][0])*55, c='white',linestyle='--')
-        ax1.plot(W[0],W[0]/(W[0][0])*45, c='white',linestyle='--')
+    ax1.plot(W[0],W[0]/(W[0][0])*55, c='white',linestyle='--')
+    ax1.plot(W[0],W[0]/(W[0][0])*45, c='white',linestyle='--')
     
 
     ax1.set_ylabel("Distance angulaire au centre de l'étoile [mas]",fontsize = 13)
@@ -128,7 +129,8 @@ def big_spectra_without_flux(W,D,intensity, PATH_OUTPUT_SPECTRA, additionnal_tic
 
     # First part of the plot deal with intensity profile
     
-    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
+    #plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=rmap, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
+    plot1=ax1.pcolor(W,D,intensity,shading='auto', cmap=mp, norm=matplotlib.colors.LogNorm(vmin=1E-4, vmax=1E0))
             
     ax1.set_yscale('log')
 

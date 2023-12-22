@@ -9,16 +9,16 @@ Created on Tue Aug 11 14:14:23 2020
 from rhapsody_init import OIFITS_FLUX, ERROR_SUP, DATA_DIR, DATA_band_name, PROCESS_DIR, REG_method, HP, FITTING, model_visibilities, image_rec_windows, inc_flag, READING_ONLY, borders_spectra, manual_borders, additionnal_ticks, CONCATENATE, resolution, fft_q_min, fft_q_max, fft_nb_points
 from initialisation_rings import rings
 from fits_reading_dico import OIFITS_READING, OIFITS_SORTING, OIFITS_READING_concatenate
-from stock_dico_values import stock_V2_from_dico
+from stock_dico_values import stock_V2_from_dico, stock_V2_from_dico_CONCATENATE
 from create_folder import FOLDER_CREATION
 from remove_files_from_folder import REMOVE_ALL_FILES_FROM_FOLDER
 from fitting_function_ud_ring import UD_modeling
 import numpy as np
-from spectra_extraction import spectra_data
+from spectra_extraction import spectra_data, spectra_data_CONCATENATE
 from data_copy import COPY_DATA
 import sys
 from big_spectra import big_spectra_with_flux,big_spectra_without_flux
-from data_flag_flux import FLUX_FLAG
+from data_flag_flux import FLUX_FLAG, FLUX_FLAG_CONCATENATE
 from model_visibilities import V_ring
 from post_processing import post_processing
 from numpy import cos as cos
@@ -53,16 +53,17 @@ if __name__ == '__main__':
         
         # READ ALL THE DATA and put them in dicos in order to manipulate the data easily
         OIFITS_TOT = OIFITS_READING()
+        wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR, U_DATA, V_DATA = stock_V2_from_dico(OIFITS_TOT)
     
     elif CONCATENATE == True:
         
         OIFITS_SORTING()
         OIFITS_TOT = OIFITS_READING_concatenate()
+        wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR, U_DATA, V_DATA = stock_V2_from_dico_CONCATENATE(OIFITS_TOT)
         
     
     # We regroup all the usefull information that we want in simple masked array to handle easily the data for the fitting
     
-    wavel_DATA, q_DATA, V2_DATA, V2_DATA_ERR, U_DATA, V_DATA = stock_V2_from_dico(OIFITS_TOT)
 
     # Let's correct the ERROR BARS here:
 
@@ -142,7 +143,13 @@ if __name__ == '__main__':
             
             FOLDER_CREATION(PATH_RESULTS)
             FOLDER_CREATION(PATH_OUTPUT)
-            REMOVE_ALL_FILES_FROM_FOLDER(PATH_OUTPUT)
+            
+            #If a folder with the same band name is still here, delete it (DO IT!)
+            try:
+                for k in range(len(DATA_band_name)):
+                    REMOVE_ALL_FILES_FROM_FOLDER(PATH_OUTPUT+ '/' +DATA_band_name[k])
+            except:
+                None
             for k in range(len(DATA_band_name)):
                 FOLDER_CREATION(PATH_OUTPUT_VIS[k]) 
                 FOLDER_CREATION(PATH_OUTPUT_INT[k])
@@ -192,9 +199,15 @@ if __name__ == '__main__':
                     # PROCESSING AND FLAGGING THE FLUX    
                     print('STARTING FLUX SORTING')
                     # Here I flag the flu data 
-                    OIFITS_TOT = FLUX_FLAG(OIFITS_TOT)
+                    if CONCATENATE == True :
+                        OIFITS_TOT = FLUX_FLAG_CONCATENATE(OIFITS_TOT)
+                        FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_data_CONCATENATE(OIFITS_TOT[k], PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_SPECTRA[k])
+                        
+                    else:                            
+                        OIFITS_TOT = FLUX_FLAG(OIFITS_TOT)
+                        FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_data(OIFITS_TOT[k], PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_SPECTRA[k])
                     # Here I compute the spectra for each AT's and the total spectra
-                    FLUX_WAVEL, FLUX_DATA, FLUX_DATA_err = spectra_data(OIFITS_TOT[k], PATH_OUTPUT_FIT_RES[k], PATH_OUTPUT_SPECTRA[k])
+                    
 
                     # Here I plot the BIG SPECTRA
                     if manual_borders == True:

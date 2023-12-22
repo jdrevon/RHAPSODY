@@ -24,18 +24,13 @@ CONCATENATE = True  #CONCATENATE = True only if files are concatenated files (wi
 
 
 # Be carefull the data should have the .fits, .oifits files will not work !
-DATA_DIR = ["C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2018_12_continuum",
-            "C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2018_12_SiO",
-            "C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2020_02_continuum",
-            "C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2020_02_SiO",
-            "C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2020_12_continuum",
-            "C:/Users/jdrevon/partage/IMAGING_REC_IMAGES/ARTICLE_IMAGE_REC/2020_12_SiO"]
+DATA_DIR = ["C:/Users/jdrevon/Desktop/VLTI Observations/pi01Gru/DATA_RHAPSODY"]
 # DATA_DIR = ["C:/Users/jdrevon/Desktop/Betelgeuse/NEW_CALIBRATED_DATA_TF/2018/MERGE_SORTED/LM"]
              #Path for all the different bands
 
 # FOLDER USED TO STOCK THE DATA AND DISPLAY THE RESULTS
 
-PROCESS_DIR = "C:/Users/jdrevon/Desktop/BetelgeuseRHAPSODY"
+PROCESS_DIR = "C:/Users/jdrevon/Desktop/VLTI Observations/pi01Gru/RHAPSODY"
 
 # PROCESS_DIR = "C:/Users/jdrevon/Desktop/Presentations/Conference_2022/SPIE/beauty_contest"
 
@@ -53,9 +48,9 @@ nprocs = 6 # Nbr of cores
 
 ############ DATA WVL ranges
 #Ex:
-DATA_band_name = ['2018_12_continuum','2018_12_SiO', '2020_02_continuum','2020_02_SiO', '2020_12_continuum', '2020_12_SiO'] 
-DATA_band_min  = [2,2,2,2,2,2]  #µm  
-DATA_band_max  = [5,5,5,5,5,5] #µm
+DATA_band_name = ['2022_LM_reflag'] 
+DATA_band_min  = [4.02]  #µm  
+DATA_band_max  = [4.175] #µm
 
 # DATA_band_name = ['H'] 
 # DATA_band_min  = [1.0]  #µm 
@@ -82,7 +77,7 @@ DATA_band_max  = [5,5,5,5,5,5] #µm
 #        (viserr > 0)         &\
 #        (viserr < 0.1)    #   &\
 
-REFLAGGING_DATA = False #only available for now for non-concatanated data
+REFLAGGING_DATA = True 
 
 
 # Does the error bar on visibilities seems underestimated? 
@@ -93,12 +88,12 @@ REFLAGGING_DATA = False #only available for now for non-concatanated data
 
 # ERROR_SUP = [0.02,0.02,0.02,0.02]
 # ERROR_SUP = [0.0001,0.0001]
-ERROR_SUP = [0.03,0.03,0.03,0.03,0.03,0.03]
+ERROR_SUP = [0.003]
 
 # FLUX
 # Is the OIFITS_FLUX table is provided in the data? If Yes, please set True, if not set False
 
-OIFITS_FLUX = False
+OIFITS_FLUX = True
 
 
 ########### RINGS:
@@ -107,8 +102,8 @@ OIFITS_FLUX = False
 # NBR_ring  = [56,60] # NBR_ring [#] : number of rings to put in the model for the different bands
 
 
-size_ring = [2,2,2,2,2,2]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
-NBR_ring  = [56,56,56,56,56,56]     # NBR_ring [#] : number of rings to put in the model for the different bands
+size_ring = [2]      # size_ring [mas] : constant angular diameter of a ring in the i-th band.
+NBR_ring  = [56]     # NBR_ring [#] : number of rings to put in the model for the different bands
 
 init = 'G' # G for Gaussian like profile, PW for power-law like profile, D for Uniform Disk
 
@@ -122,7 +117,7 @@ alpha  = [.2] # alpha [#] : Power law of the intensity profile for each bands (1
     
 # FWHM = [3,10]    # sigma [mas] : FWHM of the intensity profile for each bands 
 
-FWHM = [25,25,25,25,25,25]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
+FWHM = [25]    # sigma [mas] : Standard deviation of the intensity profile for each bands FWHM ~ 2.3*sigma 
 sigma = (np.array(FWHM)/2.3).tolist()
 
 # For Uniform Disk 
@@ -140,7 +135,7 @@ REG_method = 'TV' #fprior
 
 ########### Value of the Hyperparameter: 
 
-HP = [0,1E1,5E1,1E2,5E2,1E3,5E3,1E4,5E4,1E5,5E5,1E6,5E6,1E7,5E7] # µ
+HP = [0,1E1,5E1,1E2,5E2,1E3,5E3,1E4,5E4,1E5] # µ
 
 ########### Fitting Parameters:
     
@@ -194,24 +189,24 @@ angle_guess    = [45] # orientation angle of the structure # 0° = no orientatio
 
 ########### Set the resolution of the modeled curve for the plot:
 
-model_visibilities = [2000,2000,2000,2000,2000,2000] #Number of points to interpolate the visibilities (the higher the flatness value is, the higher the number of points is required) 
+model_visibilities = [2000] #Number of points to interpolate the visibilities (the higher the flatness value is, the higher the number of points is required) 
 
 # model_rho_min = [None, None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
 # model_rho_max = [None, None] # [rad^-1] If None the intensity profile ends at the model edges
 # model_rho     = [1000, 1000] # Number of points in the model for each bands
 
 
-model_rho_min = [None, None,None,None,None,None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
-model_rho_max = [None, None,None,None,None,None] # [rad^-1] If None the intensity profile ends at the model edges
-model_rho     = [1000, 1000, 1000, 1000, 1000, 1000] # Number of points in the model for each bands
+model_rho_min = [None] # [rad^-1] If None the intensity profile starts at 0 (the stallar center)
+model_rho_max = [None] # [rad^-1] If None the intensity profile ends at the model edges
+model_rho     = [1000] # Number of points in the model for each bands
 
 
 ########### Set the windows in mas of the images:
 
-image_rec_windows = [40,40,40,40,40,40] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
+image_rec_windows = [40] # The maximum radial distance that the user want to display on the image reconstruction and the intensity profile plots
                                         # ex= [800] ==> -800 mas ---////---- + 800 mas
 
-resolution = [128, 128,128,128,128,128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
+resolution = [128] # Set the image resolution (since RHAPSODY use FFT, please prefer a power of 2 number)
 
 fft_nb_points = [2000] # Number of points used to reconstruct the image in the Fourier Plane of size (fft_nb_point*fft_nb_points)
 fft_q_min = [4] # logarithmic power of the minimum spatial frequency to be interpolated in the Fourier Plane
@@ -227,14 +222,14 @@ manual_borders = True
 # And now set your borders 
 # ex: borders_spectra = [ [min of BORDERS BAND 1 ,max of BORDERS BAND 1], [min of BORDERS BAND 2 ,max of BORDERS BAND 2]] 
 
-borders_spectra = [[3, 120],[3,120],[3, 120],[3, 120],[3, 120],[3, 120]]
+borders_spectra = [[3, 120]]
 
 #6 : If you want to add some ticks in the specta of the radial profile put them here:
     
 # example: additionnal_ticks = [ [TICKS FOR THE FIRST BAND], [TICKS FOR THE FIRST BAND] ]
 # Let the array empty if you don't want the additionnal ticks
 
-additionnal_ticks= [[5, 10, 12, 18, 25, 75, 120 ], [5, 10, 12, 18, 25, 75, 120],[5, 10, 12, 18, 25, 75, 120 ],[5, 10, 12, 18, 25, 75, 120 ],[5, 10, 12, 18, 25, 75, 120 ],[5, 10, 12, 18, 25, 75, 120 ]]
+additionnal_ticks= [[5, 10, 12, 18, 25, 75, 120 ]]
 
 
 
@@ -259,9 +254,9 @@ NBR_GRPS_PA = 4
 
 BB_norm = True 
 
-BB_temperature = 2700 # Kelvins
-distance_target = 632 #pc
-stellar_radii = 3 # AU
+BB_temperature = 3100 # Kelvins
+distance_target = 160 #pc
+stellar_radii = 2 # AU
 
 
     

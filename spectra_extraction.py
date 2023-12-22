@@ -115,3 +115,111 @@ def spectra_data(OIFITS_TOT, PATH_OUTPUT_FIT_RES, PATH_OUTPUT_SPECTRA):
 
     return WAVEL, FLUX_DATA, FLUX_DATA_err
 
+
+def spectra_data_CONCATENATE(OIFITS_TOT, PATH_OUTPUT_FIT_RES, PATH_OUTPUT_SPECTRA):
+    
+    
+    if ntelescope == 2:
+
+        AT=['AT1','AT2']
+        
+    if ntelescope == 3:
+
+        AT=['AT1','AT2','AT3']
+        
+    if ntelescope == 4:
+    
+        AT=['AT1','AT2','AT3','AT4']
+    
+    # What we want is to make statistics per AT on the flux to flag all the flux data
+    # So we will stock all the data per AT make the median of all the flux in order to have N median spectras for the N AT's 
+    
+    
+    # We start looping over the AT's
+    FLUX  = np.zeros((ntelescope, int(len(OIFITS_TOT['FLUX']["FLUX"])/ntelescope), len(OIFITS_TOT['WAVEL'])))
+    FLUX_ERR  = np.zeros((ntelescope, int(len(OIFITS_TOT['FLUX']["FLUX_ERR"])/ntelescope), len(OIFITS_TOT['WAVEL'])))
+    wavel  = np.zeros((ntelescope, int(len(OIFITS_TOT['FLUX']["WAVEL"])/ntelescope), len(OIFITS_TOT['WAVEL'])))
+    
+    X_w_tot = np.zeros((ntelescope, len(OIFITS_TOT['WAVEL'])))
+    sigma_tot = np.zeros((ntelescope, len(OIFITS_TOT['WAVEL'])))
+    
+    for j in range(len(AT)):
+                     
+        # I select the flux data from the i-th AT
+        AT_index = np.where(OIFITS_TOT['FLUX']['AT_NUMBER']==AT[j])
+        
+        # Once I have the correspond index of the flux from AT over the N arrays of flux I will stock the values in FLUX[i][j][:]
+        # So in the first loop AT1 values will be stocked in the first slot of the FLUX array.
+            
+        FLAG = OIFITS_TOT['FLUX']['FLAG'][AT_index]
+        
+        FLUX[j]      = np.reshape(ma.array(OIFITS_TOT['FLUX']['FLUX'][AT_index], mask= FLAG), (int(len(OIFITS_TOT['FLUX']["FLUX"])/ntelescope),len(OIFITS_TOT['WAVEL'])))
+        FLUX_ERR[j]  = np.reshape(ma.array(OIFITS_TOT['FLUX']['FLUX_ERR'][AT_index], mask= FLAG), (int(len(OIFITS_TOT['FLUX']["FLUX"])/ntelescope),len(OIFITS_TOT['WAVEL'])))
+        wavel[j]     = np.reshape(ma.array(OIFITS_TOT['FLUX']['WAVEL'][AT_index], mask= FLAG), (int(len(OIFITS_TOT['FLUX']["FLUX"])/ntelescope),len(OIFITS_TOT['WAVEL'])))
+        
+        # Each AT spectra are the weighted mean of all the indivudal spectra with this telescope
+         
+        x_i = ma.array(FLUX[j])
+        sigma_sup = ma.array(FLUX_ERR[j])
+
+        W = 1/sigma_sup**2 
+        X_w = np.sum(W*x_i,axis=0)/np.sum(W,axis=0)
+        V_X_w = np.sum(W**2,axis=0)/(np.sum(W,axis=0)**2-np.sum(W**2,axis=0))*np.sum(W*(x_i-X_w)**2,axis=0)/np.sum(W,axis=0) 
+        sigma = np.sqrt(V_X_w)
+                
+
+        WAVEL         = OIFITS_TOT['WAVEL']*1E6
+        
+        X_w_tot[j] = X_w
+        sigma_tot[j] = sigma
+        
+        FLUX_DATA     = X_w
+        FLUX_DATA_err = sigma
+
+        print(AT[j])        
+
+        plt.figure()
+        plt.errorbar(WAVEL,FLUX_DATA,yerr=FLUX_DATA_err, fmt='o', ms=1)
+        ax=plt.gca()
+        ax.set_xlabel('Wavelengths [µm]')
+        ax.set_ylabel('Flux [Jy]')
+        ax.set_xscale('log')
+        ax.set_ylim(bottom=-20)
+        plt.savefig(PATH_OUTPUT_SPECTRA+'%s_spectra.jpg'%AT[j],bbox_inches='tight', dpi=400)
+        plt.close()
+
+
+        data_flux = PrettyTable()
+        data_flux.field_names = ["Wvl [µm]"]+['Flux [Jy]']+['ERR Flux [Jy]']
+        for k in range(len(WAVEL)):
+            data_flux.add_row([WAVEL[k]]+ [FLUX_DATA[k]] + [FLUX_DATA_err[k]])
+        with open(PATH_OUTPUT_FIT_RES+'%s_FLUX.dat'%AT[j], 'w') as f: f.write(str(data_flux))
+
+
+
+    FLUX_TOT      = ma.mean(ma.array(X_w_tot),axis=0)
+    FLUX_std_TOT  = ma.mean(ma.array(sigma_tot), axis=0)
+
+    # The total spectra is the mean of all the AT's spectra computed before
+
+    FLUX_DATA     = FLUX_TOT
+    FLUX_DATA_err = FLUX_std_TOT
+
+    data_flux = PrettyTable()
+    data_flux.field_names = ["Wvl [µm]"]+['Flux [Jy]']+['ERR Flux [Jy]']
+    for k in range(len(WAVEL)):
+        data_flux.add_row([WAVEL[k]]+ [FLUX_DATA[k]] + [FLUX_DATA_err[k]])
+    with open(PATH_OUTPUT_FIT_RES+'MEAN_FLUX.dat', 'w') as f: f.write(str(data_flux))
+
+    plt.figure()
+    plt.errorbar(WAVEL,FLUX_DATA,yerr=FLUX_DATA_err, fmt='o', ms=1)
+    ax=plt.gca()
+    ax.set_xlabel('Wavelengths [µm]')
+    ax.set_ylabel('Flux [Jy]')
+    ax.set_xscale('log')
+    ax.set_ylim(bottom=-20)
+    plt.savefig(PATH_OUTPUT_SPECTRA+'AT_mean_spectra.jpg',bbox_inches='tight', dpi=400)
+    plt.close()
+
+
+    return WAVEL, FLUX_DATA, FLUX_DATA_err
